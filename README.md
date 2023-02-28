@@ -5,9 +5,9 @@ Inject js to remove elements or add attributes to page.
 
 ## Uses 
 
-**chrome.scripting.executeScript**  
-**chrome.action**
-**document.getElementsByClassName**
-**document.getElementById**
-**document.getElementsByTagName**
+**chrome.scripting.executeScript**
+**chrome.action** 
+**document.getElementsByClassName** 
+**document.getElementById** 
+**document.getElementsByTagName** 
 
