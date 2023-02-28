@@ -1,0 +1,14 @@
+{
+	"manifest_version": 3,
+	"name": "rem ad blk",
+	"description": "to browse better",
+	"version": "1.0",
+	"background": {
+		"service_worker": "js/cleanup_worker.js"
+	},
+	"action": {
+		"default_title": "click"
+	},
+	"permissions": ["activeTab", "scripting"]
+
+}	
