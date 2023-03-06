@@ -9,6 +9,6 @@
 	"action": {
 		"default_title": "click"
 	},
+	"host_permissions": ["https://*/*", "http://*/*"],
 	"permissions": ["activeTab", "scripting"]
-
-}	
+}

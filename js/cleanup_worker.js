@@ -47,4 +47,11 @@ chrome.action.onClicked.addListener(async (tab) => {
 			files: [ 'js/ktla.js' ],
 		});
 	}
+	else {
+		chrome.action.setPopup({
+			tabId: tab.id,
+			popup: 'popup/popup.html',
+		});
+	}
 });
+
