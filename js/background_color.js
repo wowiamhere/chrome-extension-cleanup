@@ -1,50 +1,55 @@
-// JS/BACKGROUND_COLOR.JS
-// Displays a clickable to change background color.
-// Takes body, each child of body and each first child of each first child of body
-//    and creates a clickable button to set its backgroudn color to custom
+bg_color = 'background-color: rgb(171,171,171)';
 
+handle_links('kill');
 
-function all_document(){
-// Displays a table with clikable buttons. 
-// 1 for each child of body.
-// 1 for each first child of each child of body.
-// Upon clicking, background color of element set to custom
+body_listener = document.body.addEventListener("click", body_listener, {once:false} );
 
-	document.getElementById('site-url').appendChild( document.createTextNode( document.location.href ) );
+el = document.createElement('div');
+el.appendChild( document.createTextNode('CLOSE EXTENSION') );
+el.setAttribute('id', 'backgroundColor_extension');
+el.setAttribute('style', 'background-color: red;z-index:999999;display:block;position:sticky;top:0px;text-align:center;font-size:1.6vw;font-weight:bold');
+btn_listener = el.addEventListener('click', close_extension, {once:true});
 
-	const body = document.getElementsByTagName('body')[0];
-	const html_colec_body_children = body.children;
-	const arr_body_children = Array.from(html_colec_body_children).filter(filter_tags);
-
-	const body_ul = document.createElement('ul').setAttribute('id', 'body_ul');
-
-	for(el of arr_body_children){
-		let id = el.className;
-		let temp_el = document.createElement('li').setAttribute('id', id);
-		body_ul.appendChild(temp_el);
-		body_ul.appendChild(document.createElement('ul').setAttribute('id', 'first-child-of-'+id));
-		id = el.firstChild.className;
-		temp_el = document.createElement('li').setAttribute('id', id);
-		body_ul.appendChild(temp_el);
-	}
-		
-	document.getElementById('change-bg-color').appendChild(body_ul);
-
-}
-
-function kill_links(){
-// Deactivates all links but Events still work for mouse clicks on <a>.
-	for(let i=0; i < document.links.length; i++){
-		document.links[i].setAttribute('style', 'pointer-events:none');
-	}
-}
+document.body.insertBefore(el, document.body.children[0] );
 
 function filter_tags(el){
-// Filter for an array of elements to filter out non rendering elements.
-	if el.localName == 'script'
+	if (el.tagName.toLowerCase() == 'script')
 		return false;
-	else if el.localName == 'noscript'
+	else if (el.tagName.toLowerCase() == 'noscript')
+		return false;
+	else if (el.tagName.toLowerCase() == 'a')
 		return false;
 	else
 		return true;
+}
+
+function handle_links(to_do){
+	let links = document.links;
+
+	if(to_do == 'kill'){
+		for(let i=0; i<links.length; i++){                                   	
+			let style;
+			style = links[i].style.cssText ? links[i].style.cssText : '';
+			style = style + ';pointer-events:none';
+			links[i].setAttribute('style', style);
+		}
+	}else{
+		for(let i=0; i<links.length; i++){                                   	
+                	let style;
+	              	style = links[i].style.cssText ? links[i].style.cssText : '';
+                	style = style.replace('pointer-events:none', '');
+                	style = style.replace('pointer-events: none', '');
+			links[i].setAttribute('style', style);
+		}
+		document.body.removeEventListener('click', body_listener, true);
+		document.getElementById('backgroundColor_extension').remove();
+	}
+}
+
+function body_listener(ev){
+	ev.target.setAttribute('style', 'background-color: rgb(171,171,171)');
+}
+
+function close_extension(){
+	handle_links('open_links');
 }

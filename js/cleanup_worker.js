@@ -1,9 +1,7 @@
 const sites = {
 	'fox': 'https://www.foxnews.com',
-	'cnn': 'https://www.cnn.com/',
-	'waPo': 'https://www.washingtonpost.com/',
-	'nyt': 'https://www.nytimes.com/',
-	'ktla': 'https://ktla.com/'
+	'waPo': 'https://www.washingtonpost.com',
+	'nyt': 'https://www.nytimes.com',
 };
 
 chrome.action.onClicked.addListener(async (tab) => {
@@ -15,18 +13,6 @@ chrome.action.onClicked.addListener(async (tab) => {
 		await chrome.scripting.executeScript({
 			target: { tabId: tab.id },
 			files: ['js/fox.js'],
-		});
-	}
-	else if (tab.url == sites.cnn){
-		await chrome.scripting.executeScript({
-			target: { tabId: tab.id },
-			files: [ 'js/cnnMainPage.js' ],
-		});
-	}
-	else if ( tab.url.startsWith( sites.cnn ) ){
-		await chrome.scripting.executeScript({
-			target: { tabId: tab.id },
-			files: [ 'js/cnnRest.js' ],
 		});
 	}
 	else if ( tab.url.startsWith( sites.waPo ) ){
@@ -41,16 +27,11 @@ chrome.action.onClicked.addListener(async (tab) => {
 			files: [ 'js/nyt.js' ],
 		});
 	}
-	else if ( tab.url.startsWith( sites.ktla ) ){
+	else{
 		await chrome.scripting.executeScript({
 			target: { tabId: tab.id },
-			files: [ 'js/ktla.js' ],
-		});
-	}
-	else {
-		chrome.action.setPopup({
-			tabId: tab.id,
-			popup: 'popup/popup.html',
+			files: [ 'js/background_color.js' ],
+			world: 'MAIN',
 		});
 	}
 });
