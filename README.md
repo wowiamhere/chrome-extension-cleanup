@@ -13,7 +13,7 @@ Waits for user to click on the screen.
 Upon clicking button to 'CLOSE EXTENSION',  
 All links are re-activated,  
 ```<div>``` on top of page is removed  
-```document.body`` EventListener is removed.  
+```document.body``` EventListener is removed.  
 
   
 ## Uses  
