@@ -16,15 +16,15 @@ All links are re-activated,
 ```document.body``` EventListener is removed.  
 
   
-## Uses  
-  
-**chrome.scripting.executeScript**   
-**chrome.scripting.insertCSS**  
-**chrome.action**   
+## chrome Extensions
+**[chrome.scripting](https://developer.chrome.com/docs/extensions/reference/scripting/)**   
+chrome.scripting.executeScript   
+chrome.scripting.insertCSS   
+
+**[chrome.action](https://developer.chrome.com/docs/extensions/reference/action/)**   
   
 ## Javascript  
   
-Uses  
 **Element.appendChild**  
 **Element.setAttribute**  
 **Element.addEventListener**  
