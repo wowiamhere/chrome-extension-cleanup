@@ -1,14 +1,34 @@
-# Chrome Extension
+# Chrome Extension  
+  
+Inject Css and Javascript modifying web page background color (from white to rgb(171,171,171) to lessen impact one eyes.  
+  
+**Upon activation**  
+Adds a ```<div>``` with an EventListener to the top of the page with an event clicker to close extension.  
+Deactivates all links.  
+Adds EventListener to ```document.body```  
+Waits for user to click on the screen.  
+**USER can click anywhere on the page, including links, to change backgroud color.**  
+  
+**Upon deactivation**  
+Upon clicking button to 'CLOSE EXTENSION',  
+All links are re-activated,  
+```<div>``` on top of page is removed  
+```document.body`` EventListener is removed.  
 
-Inject css modifying web page background color (from white to rgb(171,171,171) to lessen impact one eyes.
-Inject js to remove elements or add attributes to page.
-
-## Uses 
-
+  
+## Uses  
+  
 **chrome.scripting.executeScript**   
+**chrome.scripting.insertCSS**  
 **chrome.action**   
-**document.getElementsByClassName**   
-**document.getElementById**   
-**document.getElementsByTagName**   
-
+  
+## Javascript  
+  
+Uses  
+**Element.appendChild**  
+**Element.setAttribute**  
+**Element.addEventListener**  
+**Element.removeEventListener**  
+**Element.remove**  
+  
 
