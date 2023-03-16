@@ -2,13 +2,13 @@ bg_color = 'background-color: rgb(171,171,171)';
 
 handle_links('kill');
 
-body_listener = document.body.addEventListener("click", body_listener, {once:false} );
+document.body.addEventListener("click", body_listener, {once:false} );
 
 el = document.createElement('div');
 el.appendChild( document.createTextNode('CLOSE EXTENSION') );
 el.setAttribute('id', 'backgroundColor_extension');
 el.setAttribute('style', 'background-color: red;z-index:999999;display:block;position:sticky;top:0px;text-align:center;font-size:1.6vw;font-weight:bold');
-btn_listener = el.addEventListener('click', close_extension, {once:true});
+el.addEventListener('click', close_extension, {once:true});
 
 document.body.insertBefore(el, document.body.children[0] );
 
@@ -41,13 +41,16 @@ function handle_links(to_do){
                 	style = style.replace('pointer-events: none', '');
 			links[i].setAttribute('style', style);
 		}
-		document.body.removeEventListener('click', body_listener, true);
+		document.body.removeEventListener('click', body_listener);
 		document.getElementById('backgroundColor_extension').remove();
 	}
 }
 
 function body_listener(ev){
-	ev.target.setAttribute('style', 'background-color: rgb(171,171,171)');
+	if(ev)
+		ev.target.setAttribute('style', 'background-color: rgb(171,171,171)');
+	else
+		return undefined;
 }
 
 function close_extension(){
