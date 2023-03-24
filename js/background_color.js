@@ -1,4 +1,4 @@
-window.extension_stylesheet ? window.extension_stylesheet : extension_stylesheet = new CSSStyleSheet();
+window.extension_stylesheet ? window.extension_stylesheet.replaceSync('') : extension_stylesheet = new CSSStyleSheet();
 window.extension_user_stylesheet ? window.extension_user_stylesheet : extension_user_stylesheet = new CSSStyleSheet();
 
 document.adoptedStyleSheets = [ extension_stylesheet, extension_user_stylesheet ];
@@ -57,6 +57,7 @@ function handle_links(to_do){
   if(to_do == 'kill')
     extension_stylesheet.insertRule('a{pointer-events:none !important;}');
   else{
+    extension_stylesheet.deleteRule(0);
     document.body.removeEventListener('click', body_listener);
     document.getElementById('backgroundColor_extension').remove();
   }
