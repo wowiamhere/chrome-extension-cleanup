@@ -1,4 +1,4 @@
-window.extension_stylesheet ? window.extension_stylesheet.replaceSync('') : extension_stylesheet = new CSSStyleSheet();
+extension_stylesheet = new CSSStyleSheet();
 window.extension_user_stylesheet ? window.extension_user_stylesheet : extension_user_stylesheet = new CSSStyleSheet();
 
 document.adoptedStyleSheets = [ extension_stylesheet, extension_user_stylesheet ];
@@ -7,7 +7,7 @@ el_name = 'div';
 el_id = 'backgroundColor_extension';
 el = document.createElement( el_name );
 el.setAttribute('id', el_id );
-css_array = ['z-index:999999', 'width:10%', 'position:fixed', 'float:right', 'left:88%', 'height:5vw', 'border:0.5vw solid red', 'border-radius:2vw'];
+css_array = ['z-index:999999', 'width:10%', 'position:fixed', 'left:88%', 'top:6vw', 'height:5vw', 'border:0.5vw solid red', 'border-radius:2vw'];
 
 extension_stylesheet.insertRule( el.tagName + '#' + el.id + ' {' + css_array.join(';') + '}' );
 
@@ -36,15 +36,15 @@ close_btn.appendChild( document.createTextNode('DONE') );
 close_btn.addEventListener('click', close_extension, {once:true});
 
 el.appendChild( close_btn );
-document.body.insertBefore(el, document.body.children[0] );
+
+document.body.appendChild( el );
 
 handle_links('kill');
 
-document.body.addEventListener('click', body_listener, {once:false} );
+document.body.addEventListener("click", body_listener, {once:false} );
 
-ext_id_counter = 0;
-ext_attr = 'ext_id';
-ext_attr_val = 'ext_id_'
+for_id = 0;
+for_clss = 0;
 
 function get_color(ev){
   if(ev){
@@ -53,40 +53,32 @@ function get_color(ev){
     return undefined
 }
 
-function handle_links(to_do){
-  if(to_do == 'kill')
-    extension_stylesheet.insertRule('a{pointer-events:none !important;}');
-  else{
-    extension_stylesheet.deleteRule(0);
-    document.body.removeEventListener('click', body_listener);
-    document.getElementById('backgroundColor_extension').remove();
-  }
-}
-
 function body_listener(ev){
 
   let index;
-  let attr;
+  let selector;
   let rule;
-
+  
   if(ev)
     if(ev.target != document.getElementById('backgroundColor_extension') ){
       if(ev.target != document.getElementById('backgroundColor_extension').children[0]){
 
-        attr = ev.target.attributes.ext_id ? ev.target.attributes.ext_id.value : set_att( ev.target );
-        index = check_sheet( attr );
-        rule = '[' + ext_attr + '=' + attr + '] { background-color: ' + bg_color + ' !important;}';
+        selector = get_selector( document.querySelectorAll(':hover') );
+
+        rule =  selector + '{background-color:' + bg_color + ' !important;}';
           
+        index = check_sheet( selector );
+
         if( index != undefined ){
-          
-          extension_user_stylesheet.deleteRule( index );
-          extension_user_stylesheet.insertRule( rule );
-          
-        }else{
-          
-          extension_user_stylesheet.insertRule( rule );
-          
-        }
+            
+            extension_user_stylesheet.deleteRule( index );
+            extension_user_stylesheet.insertRule( rule );
+            
+          }else{
+            
+            extension_user_stylesheet.insertRule( rule );
+            
+          }
       }
     }else
     return undefined;
@@ -96,20 +88,47 @@ function close_extension(){
   handle_links('open_links');
 }
 
-function set_att(el){
-
-  el.setAttribute( ext_attr, ext_attr_val + ext_id_counter );
-  ++ext_id_counter;
-  
-  return el.attributes.ext_id.value;
-
+function handle_links(to_do){
+  if(to_do == 'kill')
+    extension_stylesheet.insertRule('a{pointer-events:none !important;}');
+  else{
+    document.adoptedStyleSheets.shift();
+    document.body.removeEventListener('click', body_listener);
+    document.getElementById('backgroundColor_extension').remove();
+  }
 }
 
-function check_sheet(attr_val){
+function get_selector(nodes){
+
+  let selector_array = [];
+  let idx;
+  let nodes_arr = [];
+
+  nodes_arr = Array.from(nodes);
+  nodes_arr.shift();
+
+  selector_array = Array.prototype.map.call( nodes_arr, (node) => {
+
+    idx = Array.prototype.indexOf.call( node.parentElement.children, node ) + 1;
+
+    if(node.id)
+      return node.tagName.toLowerCase() + '#' + node.id.substring(0, node.id.indexOf(' ') ? node.id.length : node.id.indexOf(' ') ) + ':nth-child(' + idx + ')';
+    if(node.className)
+      return node.tagName.toLowerCase() + '.' + node.classList[0] + ':nth-child(' + idx + ')';
+    else
+      return node.tagName.toLowerCase() != 'body' ? '> ' + node.tagName.toLowerCase() + ':nth-child(' + idx + ')' : node.tagName.toLowerCase() + ':nth-child(' + idx + ')' ;
+
+  });
+
+  return selector_array.join(' ');
+}
+
+function check_sheet(slctr){
+  
   let rules = extension_user_stylesheet.cssRules;
-  let src = '[' + ext_attr + '="' + attr_val + '"]'
+  
     for (let i=0; i < rules.length; ++i){
-      if (src == rules[i].selectorText)
+      if ( slctr == rules[i].selectorText)
         return i;
     }
   return undefined;
