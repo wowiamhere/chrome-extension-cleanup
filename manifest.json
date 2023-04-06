@@ -7,8 +7,9 @@
 		"service_worker": "js/cleanup_worker.js"
 	},
 	"action": {
-		"default_title": "click"
+		"default_title": "click",
+		"default_popup": "popup/popup.html"
 	},
 	"host_permissions": ["https://*/*", "http://*/*"],
-	"permissions": ["activeTab", "scripting"]
+	"permissions": ["activeTab", "scripting", "debugger"]
 }
