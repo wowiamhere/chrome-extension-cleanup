@@ -1,13 +1,10 @@
 let extension_user_stylesheet = new CSSStyleSheet();
-
 let extension_stylesheet = new CSSStyleSheet();
-
 document.adoptedStyleSheets = [ extension_stylesheet, extension_user_stylesheet ];
 
-let bg_color = 'rgb(171,171,171)';
-handle_links('kill');
-document.body.addEventListener("click", body_listener, {once:false} );
+let bg_color;
 
+begin_coloring();
 
 chrome.runtime.onMessage.addListener(
   
@@ -16,15 +13,12 @@ chrome.runtime.onMessage.addListener(
     if(message.close){
       handle_links('open');
       document.body.removeEventListener('click', body_listener);
+      persist_user_css();
     }
-    if(message.stat == 'ARE_YOU_INJECTED'){
-      bg_color = 'rgb(171,171,171)';
-      handle_links('kill');
-      document.body.addEventListener("click", body_listener, {once:false} );
-    }
-    if(message.color){
+    if(message.stat == 'ARE_YOU_INJECTED')
+      begin_coloring();
+    if(message.color)
       bg_color = message.color;
-    }
     if(message.back){
       delete_last_rule();
     }
@@ -32,6 +26,12 @@ chrome.runtime.onMessage.addListener(
   }
 
 );
+
+function begin_coloring(){
+  bg_color = 'rgb(171,171,171)';
+  handle_links('kill');
+  document.body.addEventListener("click", body_listener, {once:false} );
+}
 
 function handle_links(to_do){
   if(to_do == 'kill'){
@@ -111,4 +111,21 @@ function check_sheet(slctr){
 function delete_last_rule(){
   if(extension_user_stylesheet.cssRules.length > 0)
   extension_user_stylesheet.deleteRule(0);
+}
+
+async function persist_user_css(){
+  let css_rules = extension_user_stylesheet.cssRules
+  let css_rules_arr = [];
+
+  for(let i=0; i<css_rules.length; ++i){
+    css_rules_arr.push( [ i, css_rules[i].cssText ]);
+  }
+
+  let temp = Object.fromEntries( css_rules_arr );
+  let name = document.location.origin + document.location.pathname;
+  let arr = [ [ name, temp ] ];
+
+  chrome.storage.local.set( Object.fromEntries( arr ) );
+
+console.log( await chrome.storage.local.get() );
 }

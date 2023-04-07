@@ -11,5 +11,5 @@
 		"default_popup": "popup/popup.html"
 	},
 	"host_permissions": ["https://*/*", "http://*/*"],
-	"permissions": ["activeTab", "scripting", "debugger"]
+	"permissions": ["activeTab", "scripting", "debugger", "storage"]
 }
