@@ -8,9 +8,10 @@ let bg_color = 'rgb(171,171,171)';
 handle_links('kill');
 document.body.addEventListener("click", body_listener, {once:false} );
 
+
 chrome.runtime.onMessage.addListener(
   
-  async (message, sender, sendResponse) =>{
+  async (message, sender, sendResponse) =>{    
 
     if(message.close){
       handle_links('open');
@@ -24,6 +25,10 @@ chrome.runtime.onMessage.addListener(
     if(message.color){
       bg_color = message.color;
     }
+    if(message.back){
+      delete_last_rule();
+    }
+
   }
 
 );
@@ -101,4 +106,9 @@ function check_sheet(slctr){
     }
   return undefined;
 
+}
+
+function delete_last_rule(){
+  if(extension_user_stylesheet.cssRules.length > 0)
+  extension_user_stylesheet.deleteRule(0);
 }
