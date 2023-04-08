@@ -8,29 +8,39 @@ begin_coloring();
 
 chrome.runtime.onMessage.addListener(
   
-  async (message, sender, sendResponse) =>{    
+  async (message, sender, sendResponse) =>{
 
-    if(message.close){
-      handle_links('open');
-      document.body.removeEventListener('click', body_listener);
-      persist_user_css();
-    }
     if(message.stat == 'ARE_YOU_INJECTED')
       begin_coloring();
     if(message.color)
       bg_color = message.color;
-    if(message.back){
+    if(message.back)
       delete_last_rule();
+    if(message.save){
+      persist_user_css();
+      end_coloring();
     }
-
+    if(message.restore){
+      restore_last();
+      end_coloring();
+    }
+    if(message.close){
+      persist_user_css();
+      end_coloring();
+    }
   }
 
 );
 
-function begin_coloring(){
+async function begin_coloring(){
   bg_color = 'rgb(171,171,171)';
   handle_links('kill');
   document.body.addEventListener("click", body_listener, {once:false} );
+}
+
+function end_coloring(){
+  handle_links('open');
+  document.body.removeEventListener('click', body_listener);
 }
 
 function handle_links(to_do){
@@ -118,7 +128,7 @@ async function persist_user_css(){
   let css_rules_arr = [];
 
   for(let i=0; i<css_rules.length; ++i){
-    css_rules_arr.push( [ i, css_rules[i].cssText ]);
+    css_rules_arr.push( [ css_rules[i].selectorText, css_rules[i].cssText ] );
   }
 
   let temp = Object.fromEntries( css_rules_arr );
@@ -127,5 +137,29 @@ async function persist_user_css(){
 
   chrome.storage.local.set( Object.fromEntries( arr ) );
 
-console.log( await chrome.storage.local.get() );
+console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse() * 10**-6) );
+}
+
+async function restore_last(){
+  let saved_css = new CSSStyleSheet();
+  let rules = await chrome.storage.local.get();
+  let site = document.location.origin + document.location.pathname;
+
+  for(const [i, j] of Object.entries(rules) ){
+    if(i == site){
+      for(const [h, k] of Object.entries(j) ){
+        let idx = check_sheet( h );
+        if( idx != undefined){
+          extension_user_stylesheet.deleteRule( idx );
+          extension_user_stylesheet.insertRule( k );
+
+        }
+        else{
+          extension_user_stylesheet.insertRule( k );
+        }
+      }
+
+    }
+  }
+console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse() * 10**-6) );
 }

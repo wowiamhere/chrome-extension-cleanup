@@ -1,13 +1,11 @@
 chrome.runtime.onMessage.addListener(
 
 	async (request, sender, sendResponse) => {
-console.log('service-worker!!!!!!!!!');
-
 
 		if(request.type == 'initial'){
 
 			try{
-				await chrome.tabs.sendMessage( request.tab_id, { stat: 'ARE_YOU_INJECTED'}).then((resp)=> console.log(resp) );
+				await chrome.tabs.sendMessage( request.tab_id, { stat: 'ARE_YOU_INJECTED'});
 			}
 			catch{
 

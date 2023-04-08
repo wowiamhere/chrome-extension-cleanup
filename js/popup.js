@@ -16,8 +16,8 @@ css_array = ['display:inline-block',
   'width:23vw', 
   'border:1px solid black', 
   'border-radius:4vw'];
- extension_stylesheet.insertRule( 'div' + '#' + 'xxxx' + ' {' + css_array.join(';') + '}' );
- document.getElementById('to_close').addEventListener('click', close_extension, { once: true });
+ extension_stylesheet.insertRule( 'div' + '#' + 'restore' + ' {' + css_array.join(';') + '}' );
+ document.getElementById('restore').addEventListener('click', restore_last, { once: true });
 
 css_array = ['float:right', 
   'background-color:lightblue',
@@ -100,5 +100,9 @@ function undo_last(){
 }
 
 function persist_css(){
+  chrome.tabs.sendMessage( tab[0].id, { save: true });
+}
 
+function restore_last(){
+  chrome.tabs.sendMessage( tab[0].id, { restore: true });
 }
