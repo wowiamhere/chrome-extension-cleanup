@@ -17,7 +17,7 @@ console.log( await chrome.storage.local.get() );
       bg_color = message.color;
 
     if(message.back)
-      delete_last_rule();
+      delete_rule(0);
 
     if(message.save){
       persist_user_css();
@@ -46,6 +46,7 @@ console.log( await chrome.storage.local.get() );
 );
 
 async function begin_coloring(){
+  check_db();
   bg_color = 'rgb(171,171,171)';
   handle_links('kill');
   document.body.addEventListener("click", body_listener, {once:false} );
@@ -61,8 +62,10 @@ function handle_links(to_do){
     if(!extension_stylesheet.cssRules[0])
       extension_stylesheet.insertRule('a{pointer-events:none !important;}');
   }
-  else
-    extension_stylesheet.deleteRule(0);
+  else{
+    if(extension_stylesheet.cssRules.length > 0)
+      extension_stylesheet.deleteRule(0);
+  }
 }
 
 function body_listener(ev){
@@ -131,9 +134,9 @@ function check_sheet(slctr){
 
 }
 
-function delete_last_rule(){
+function delete_rule(idx){
   if(extension_user_stylesheet.cssRules.length > 0)
-  extension_user_stylesheet.deleteRule(0);
+  extension_user_stylesheet.deleteRule( idx );
 }
 
 async function persist_user_css(){
@@ -141,12 +144,11 @@ async function persist_user_css(){
   let css_rules_arr = [];
 
   for(let i=0; i<css_rules.length; ++i){
-    css_rules_arr.push( [ css_rules[i].selectorText, css_rules[i].cssText ] );
+    css_rules_arr.push( css_rules[i].cssText );
   }
 
-  let temp = Object.fromEntries( css_rules_arr );
   let name = document.location.origin + document.location.pathname;
-  let arr = [ [ name, temp ] ];
+  let arr = [ [ name, css_rules_arr ] ];
 
   chrome.storage.local.set( Object.fromEntries( arr ) );
 
@@ -175,4 +177,37 @@ async function restore_last(){
     }
   }
 console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse() * 10**-6) );
+}
+
+async function check_db(){
+  
+  let loc = document.location.origin + document.location.pathname;
+
+  let db_item = await chrome.storage.local.get( loc );
+
+  if( Object.keys(db_item).length > 0 ){
+    
+    let rules = db_item[ loc ];
+
+    for(const rule of rules){
+
+      let sel =  (rule.slice( 0, rule.indexOf('{') ) ).trim();
+
+      if( check_sheet( sel ) == undefined )
+        extension_user_stylesheet.insertRule( rule );
+    }
+
+  }
+
+}
+
+function del_rule(idx){
+  try{
+    extension_user_stylesheet.deleteRule( idx );
+  }
+  catch(err){
+    console.log(err);
+    console.log(typeof(err));
+    console.log(JSON.stringify(err));
+  }
 }
