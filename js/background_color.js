@@ -9,13 +9,16 @@ begin_coloring();
 chrome.runtime.onMessage.addListener(
   
   async (message, sender, sendResponse) =>{
-
-    if(message.stat == 'ARE_YOU_INJECTED')
+console.log( await chrome.storage.local.get() );
+    if(message.stat == 'ARE_YOU_THERE')
       begin_coloring();
+
     if(message.color)
       bg_color = message.color;
+
     if(message.back)
       delete_last_rule();
+
     if(message.save){
       persist_user_css();
       end_coloring();
@@ -24,8 +27,18 @@ chrome.runtime.onMessage.addListener(
       restore_last();
       end_coloring();
     }
+    if(message.reset_all){
+      await chrome.storage.local.clear();
+      end_coloring();
+    }
+    if(message.reset_this){
+      let site = document.location.origin + document.location.pathname;
+      await chrome.storage.local.remove( site );
+      extension_user_stylesheet.replaceSync('');
+      end_coloring();
+    }
+
     if(message.close){
-      persist_user_css();
       end_coloring();
     }
   }
