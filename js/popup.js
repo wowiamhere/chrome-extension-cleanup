@@ -109,12 +109,15 @@ document.getElementById('to_close').addEventListener('click', close_extension, {
 let tab = await chrome.tabs.query({ active: true });
 await chrome.runtime.sendMessage( { tab_id: tab[ tab.length-1 ].id  } );
 
+set_badge('ON', 'red', 'yellow', tab[ tab.length-1 ].id );
+
 async function set_color(ev){
   chrome.tabs.sendMessage( tab[ tab.length-1 ].id, { color: ev.target.value } );
 }
 
 function close_extension(){
   chrome.tabs.sendMessage( tab[ tab.length-1 ].id, { close: true } );
+  chrome.action.setBadgeText( { text: '', tabId: tab[ tab.length-1 ].id } );
 }
 
 async function get_screenshot(){
@@ -144,4 +147,10 @@ function reset_this(){
 
 function reset_all(){
   chrome.tabs.sendMessage( tab[ tab.length-1 ].id, { reset_all: true } );
+}
+
+async function set_badge(txt, txt_col, bg_col, tb_id){
+  await chrome.action.setBadgeText( { text: txt, tabId: tb_id } );
+  await chrome.action.setBadgeTextColor( { color: txt_col, tabId: tb_id } );
+  await chrome.action.setBadgeBackgroundColor( { color: bg_col, tabId: tb_id } );
 }

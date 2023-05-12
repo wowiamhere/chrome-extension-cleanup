@@ -9,7 +9,7 @@ begin_coloring();
 chrome.runtime.onMessage.addListener(
   
   async (message, sender, sendResponse) =>{
-console.log( await chrome.storage.local.get() );
+console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
     if(message.stat == 'ARE_YOU_THERE')
       begin_coloring();
 
@@ -153,29 +153,25 @@ async function persist_user_css(){
   chrome.storage.local.set( Object.fromEntries( arr ) );
 
 console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse() * 10**-6) );
+
+  end_coloring();
 }
 
 async function restore_last(){
-  let saved_css = new CSSStyleSheet();
   let rules = await chrome.storage.local.get();
   let site = document.location.origin + document.location.pathname;
 
-  for(const [i, j] of Object.entries(rules) ){
-    if(i == site){
-      for(const [h, k] of Object.entries(j) ){
-        let idx = check_sheet( h );
-        if( idx != undefined){
-          extension_user_stylesheet.deleteRule( idx );
-          extension_user_stylesheet.insertRule( k );
-
-        }
-        else{
-          extension_user_stylesheet.insertRule( k );
-        }
+  for(const [ste, arr_rules] of Object.entries(rules) ){
+    if(ste == site){
+      extension_user_stylesheet = new CSSStyleSheet();
+      for(const rule of arr_rules ){
+        extension_user_stylesheet.insertRule( rule );
       }
 
     }
   }
+  document.adoptedStyleSheets = [ extension_stylesheet, extension_user_stylesheet];
+  end_coloring();
 console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse() * 10**-6) );
 }
 
@@ -199,15 +195,4 @@ async function check_db(){
 
   }
 
-}
-
-function del_rule(idx){
-  try{
-    extension_user_stylesheet.deleteRule( idx );
-  }
-  catch(err){
-    console.log(err);
-    console.log(typeof(err));
-    console.log(JSON.stringify(err));
-  }
 }
