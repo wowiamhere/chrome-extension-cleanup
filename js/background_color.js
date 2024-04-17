@@ -30,6 +30,7 @@ console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
     if(message.reset_all){
       await chrome.storage.local.clear();
       end_coloring();
+delete_element();
     }
     if(message.reset_this){
       let site = document.location.origin + document.location.pathname;
@@ -121,6 +122,43 @@ function get_selector(nodes){
 
   return selector_array.join(' ');
 }
+
+
+// FOR DELETING ELEMENT
+
+let selector = null;
+
+function delete_element(){
+  document.body.addEventListener("mouseover", del_el, {once:false} );
+  document.body.addEventListener("mouseout", rev, {once:false} );
+}
+
+// ev from event listener. this is a callback f()
+function del_el(ev){
+  selector = get_selector( document.querySelectorAll(':hover') );
+  console.log('############>', selector);
+
+  document.querySelector( selector ).style.border = "1px solid red";
+  document.querySelector( selector + ' :first-child').style.border = "1px solid green";
+  x = document.querySelector( selector ).children;
+console.log('xxxxxxxxxxxxxx', x);
+}
+
+function rev(){
+  console.log('---------->',selector);
+  document.querySelector( selector ).style.border = "";
+  document.querySelector( selector + ' :first-child').style.border = "";
+  selector = null;
+}
+
+
+
+
+
+
+
+
+
 
 function check_sheet(slctr){
   
