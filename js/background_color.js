@@ -123,39 +123,54 @@ function get_selector(nodes){
   return selector_array.join(' ');
 }
 
-
+/*
 // FOR DELETING ELEMENT
 
 let selector = null;
 
 function delete_element(){
-  document.body.addEventListener("mouseover", del_el, {once:false} );
-  document.body.addEventListener("mouseout", rev, {once:false} );
+  document.body.addEventListener("mouseover", highlight_el, {once:false} );
+  document.body.addEventListener("mouseout", remove_highlight, {once:false} );
+  document.body.addEventListener("click", delete_el, {once:false});
 }
 
+
 // ev from event listener. this is a callback f()
-function del_el(ev){
+function highlight_el(ev){
   selector = get_selector( document.querySelectorAll(':hover') );
-  console.log('############>', selector);
+console.log('############>', selector);
 
   document.querySelector( selector ).style.border = "1px solid red";
   document.querySelector( selector + ' :first-child').style.border = "1px solid green";
-  x = document.querySelector( selector ).children;
-console.log('xxxxxxxxxxxxxx', x);
+
+  all_children('show');
 }
 
-function rev(){
-  console.log('---------->',selector);
+function remove_highlight(){
+console.log('---------->',selector);
   document.querySelector( selector ).style.border = "";
   document.querySelector( selector + ' :first-child').style.border = "";
+  all_children('hide');
   selector = null;
 }
 
+function all_children(to_do){
+  children = document.querySelector( selector ).children;
+  for(let i=1;i < children.length;i++){
+    if(to_do == 'show')
+      children[i].style.border="1px solid black";
+    else
+      children[i].style.border="";
+  }
+}
 
+function delete_el(){
+  selector = get_selector( document.querySelectorAll(':hover') );
+  document. querySelector( selector ).remove();
+  selector = null;
+}
 
-
-
-
+*/
 
 
 
