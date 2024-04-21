@@ -1,6 +1,7 @@
 chrome.runtime.onMessage.addListener(
 
 	async (message, sender, sendResponse) => {
+/*
 			try{
 		
 				await chrome.tabs.sendMessage( message.tab_id, 
@@ -15,7 +16,12 @@ chrome.runtime.onMessage.addListener(
 				});
 
 			}
+*/
+
+
+
 	}
+
 );
 
 
@@ -49,53 +55,53 @@ function handleSelection(info){
 	case 'src':
 		get_file_src(info);
 		break;
-	case 'deleteStop':
+	case 'delete/Stop':
 		delete_element();
 		break;
+	case 'color ON/OFF':
+		start_coloring();
 	}
 }
 
-chrome.contextMenus.create({
-	title: "deleteStop",
-	contexts: ["all"],
-	id: "deleteStop"
-});
-chrome.contextMenus.create({
-	title: "youtube",
-	contexts: ["all"],
-	id: "youtube"
-});
-chrome.contextMenus.create({
-	title: "amazon",
-	contexts: ["all"],
-	id: "amazon"
-});
-chrome.contextMenus.create({
-	title: "googleSearch",
-	contexts: ["all"],
-	id: "googleSearch"
-});
-chrome.contextMenus.create({
-	title: "fileName",
-	contexts: ["all"],
-	id: "fileName"
-});
-chrome.contextMenus.create({
-	title: "camelcase",
-	contexts: ["all"],
-	id: "camelcase"
-});
-chrome.contextMenus.create({
-	title: "underscore",
-	contexts: ["all"],
-	id: "underscore"
-});
-chrome.contextMenus.create({
-	title: "src",
-	contexts: ["all"],
-	id: "src"
-});
 
+
+let items = [ 
+	'delete/Stop', 
+	'youtube', 
+	'amazon', 
+	'googleSearch', 
+	'fileName', 
+	'camelCase', 
+	'underscore', 
+	'src', 
+	'color ON/OFF' 
+	];
+let items_coloring = [ 
+	'CLOSE', 
+	'BACK', 
+	'SAVE', 
+	'RESTORE', 
+	'RESET_ALL', 
+	'RESET_THIS'
+	];
+
+for(let i = 0; i < items.length; ++i){
+	chrome.contextMenus.create({
+		title: items[i],
+		contexts: ['all'],
+		id: items[i]
+	});
+}
+
+for(let i = 0; i < items_coloring.length; ++i){
+	chrome.contextMenus.create({
+		title: items_coloring[i],
+		contexts: ['all'],
+		id: items_coloring[i],
+		parentId: 'color ON/OFF'
+	});
+
+}
 
 async function delete_element(){
 	let [tab, tab_idx] = await getActiveTab();
@@ -115,18 +121,48 @@ async function are_you_there( resp ){
 	if(resp == undefined && chrome.runtime.lastError ){
 console.log("!!!!!!!!!!!!!!!!!!!INJECT!!!!!!!!!____>");
 		let [tab, tab_idx] = await getActiveTab();
+		
 		chrome.scripting.executeScript({
-			files: ['js/test.js'],
+			files: ['js/delete_element.js'],
 			injectImmediately: true,
 			target: {tabId: tab[tab_idx].id}
 		});
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text:"DEL" } );
+
 	}
 	else{
 		let [tab, tab_idx] = await getActiveTab();
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text:"DEL" } );
 	}
 }
+
+async function start_coloring(){
+	let [tab, tab_idx] = await getActiveTab();
+
+	chrome.scripting.executeScript({
+		files: [ 'js/background_color.js' ],
+		injectImmediately: true,
+		target: { tabId: tab[tab_idx].id }
+	});
+	chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "ON"} );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 async function search_site(url, to_search){

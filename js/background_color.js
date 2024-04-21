@@ -1,3 +1,84 @@
+
+chrome.runtime.onMessage.addListener(
+  
+  async (message, sender, sendResponse) =>{
+console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
+
+    console.log("------------HERE", message);
+    sendResponse( { msg: 'COLORING HERE' } )
+
+
+
+    if(message.msg == 'CLOSE'){
+      console.log('----DONE @@@@@@@@@@');
+      end_coloring();
+    }
+
+    if(message.msg == 'COLOR')
+      bg_color = message.color;
+
+    if(message.msg == 'BACK')
+      delete_rule(0);
+
+    if(message.msg == 'SAVE'){
+      persist_user_css();
+      end_coloring();
+    }
+    if(message.msg == 'RESTORE'){
+      restore_last();
+      end_coloring();
+    }
+    if(message.msg == 'RESET_ALL'){
+      await chrome.storage.local.clear();
+      end_coloring();
+    }
+    if(message.msg == 'RESET_THIS'){
+      let site = document.location.origin + document.location.pathname;
+      await chrome.storage.local.remove( site );
+      extension_user_stylesheet.replaceSync('');
+      end_coloring();
+    }
+
+    if(message.msg == 'THERE?'){
+      let [ tab, tab_idx ] = getActiveTab();
+      let bg_txt = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
+
+
+      console.log('----COLOIRNG!!!---START!!!!!!!!');
+      begin_coloring();
+    }
+
+  }
+
+);
+
+async function getActiveTab(){
+
+  let tab = await chrome.tabs.query( { lastFocusedWindow:true } );
+  let tab_idx = 0;
+
+  for(let i=0; i < tab.length;++i){
+    if(tab[i].active == true){
+      tab_idx = i;
+      break;
+    }
+  }
+
+  return [tab, tab_idx];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 let extension_user_stylesheet = new CSSStyleSheet();
 let extension_stylesheet = new CSSStyleSheet();
 document.adoptedStyleSheets = [ extension_stylesheet, extension_user_stylesheet ];
@@ -5,46 +86,6 @@ document.adoptedStyleSheets = [ extension_stylesheet, extension_user_stylesheet 
 let bg_color;
 
 begin_coloring();
-
-chrome.runtime.onMessage.addListener(
-  
-  async (message, sender, sendResponse) =>{
-console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
-    if(message.stat == 'ARE_YOU_THERE')
-      begin_coloring();
-
-    if(message.color)
-      bg_color = message.color;
-
-    if(message.back)
-      delete_rule(0);
-
-    if(message.save){
-      persist_user_css();
-      end_coloring();
-    }
-    if(message.restore){
-      restore_last();
-      end_coloring();
-    }
-    if(message.reset_all){
-      await chrome.storage.local.clear();
-      end_coloring();
-delete_element();
-    }
-    if(message.reset_this){
-      let site = document.location.origin + document.location.pathname;
-      await chrome.storage.local.remove( site );
-      extension_user_stylesheet.replaceSync('');
-      end_coloring();
-    }
-
-    if(message.close){
-      end_coloring();
-    }
-  }
-
-);
 
 async function begin_coloring(){
   check_db();
@@ -122,56 +163,6 @@ function get_selector(nodes){
 
   return selector_array.join(' ');
 }
-
-/*
-// FOR DELETING ELEMENT
-
-let selector = null;
-
-function delete_element(){
-  document.body.addEventListener("mouseover", highlight_el, {once:false} );
-  document.body.addEventListener("mouseout", remove_highlight, {once:false} );
-  document.body.addEventListener("click", delete_el, {once:false});
-}
-
-
-// ev from event listener. this is a callback f()
-function highlight_el(ev){
-  selector = get_selector( document.querySelectorAll(':hover') );
-console.log('############>', selector);
-
-  document.querySelector( selector ).style.border = "1px solid red";
-  document.querySelector( selector + ' :first-child').style.border = "1px solid green";
-
-  all_children('show');
-}
-
-function remove_highlight(){
-console.log('---------->',selector);
-  document.querySelector( selector ).style.border = "";
-  document.querySelector( selector + ' :first-child').style.border = "";
-  all_children('hide');
-  selector = null;
-}
-
-function all_children(to_do){
-  children = document.querySelector( selector ).children;
-  for(let i=1;i < children.length;i++){
-    if(to_do == 'show')
-      children[i].style.border="1px solid black";
-    else
-      children[i].style.border="";
-  }
-}
-
-function delete_el(){
-  selector = get_selector( document.querySelectorAll(':hover') );
-  document. querySelector( selector ).remove();
-  selector = null;
-}
-
-*/
-
 
 
 

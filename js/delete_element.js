@@ -2,24 +2,20 @@ chrome.runtime.onMessage.addListener(
   async (message, sender, sendResponse) => {
 
     console.log("-----------HERE", message);
-    sendResponse({msg:"HERE"});
+    sendResponse( { msg: "DELETING HERE" } );
 
     if( message.msg == 'OFF' ){
       stop_deleting();
-      console.log('----DONE@@@@@@@@@@@@');
-    }
-    else if( message.msg == 'DEL') {
-      console.log('----START!!!!!!!!');
-      start_deleting();
+      console.log('----DONE @@@@@@@@@@@@');
     }
     else if( message.msg == 'THERE?'){
-      console.log('----THRE---START!!!!!!!!');        
+      console.log('----DELETING!!!---START!!!!!!!!');
       start_deleting();
     }
 
 });
 
-  console.log('----IN#############3');
+  console.log('----IN #############3');
   let extension_stylesheet_delete_element = new CSSStyleSheet();
   document.adoptedStyleSheets = [ extension_stylesheet_delete_element ];
 
@@ -41,8 +37,7 @@ chrome.runtime.onMessage.addListener(
     handle_links('open');
   }
 
-  // ev from event listener. this is a callback f()
-  function highlight_el(ev){
+  function highlight_el(){
     try{
       sel = get_selector( document.querySelectorAll(':hover') );
 
