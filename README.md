@@ -2,38 +2,34 @@
   
 Inject Css and Javascript modifying web page background to any desired color to lessen impact one eyes.  
   
-**Upon activation**  
-Adds a ```<div>``` with an EventListener to the top of the page with an event clicker to close extension.  
-Deactivates all links.  
-Adds EventListener to ```document.body```  
-Waits for user to click on the screen.  
+***Upon activation***  
+Adds EventListeners to Web page.
+Deactivates all links. 
 **USER can click anywhere on the page, including links, to change backgroud color.**  
   
-**Upon deactivation**  
-Upon clicking button to 'CLOSE EXTENSION',  
+***Upon deactivation***  
 All links are re-activated,  
-```<div>``` on top of page is removed  
-```document.body``` EventListener is removed.  
+EventListeners are removed.  
 
 
 ## Adds Right Click Manu Items
 
-**Delete**  
+***Delete***  
 Highlights :hovered elements and their children to select which to delete from the DOM.   
 
-**Search Website**   
+***Search Website***   
 With mouse selected text search pre-programmed website.   
 
-**fileName**  
+***fileName***  
 With mouse selected text return a hyphen separeted string optimal for file name saving.   
 
-**camelCase**   
+***camelCase***   
 With mouse selected text return a string in camel case format.   
 
-**underscore**   
+***underscore***   
 With mouse Selected text return a string separated by underscores.   
 
-**src**   
+***src***   
 Hover over any DOM element with a 'src' attribute and returns the Source Link.   
 
 _
