@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener(
       stop_deleting();
       console.log('----DONE @@@@@@@@@@@@');
     }
-    else if( message.msg == 'THERE?'){
+    else if( message.msg == 'DELETE_SCRIPT?'){
       console.log('----DELETING!!!---START!!!!!!!!');
       start_deleting();
     }

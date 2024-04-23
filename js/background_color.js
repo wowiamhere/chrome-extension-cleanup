@@ -1,13 +1,9 @@
 
 chrome.runtime.onMessage.addListener(
-  
   async (message, sender, sendResponse) =>{
-console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
 
-    console.log("------------HERE", message);
-    sendResponse( { msg: 'COLORING HERE' } )
-
-
+//    console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
+    console.log('-----------MSG______________> ', message);
 
     if(message.msg == 'CLOSE'){
       console.log('----DONE @@@@@@@@@@');
@@ -15,7 +11,7 @@ console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
     }
 
     if(message.msg == 'COLOR')
-      bg_color = message.color;
+      //bg_color = message.color;
 
     if(message.msg == 'BACK')
       delete_rule(0);
@@ -38,46 +34,17 @@ console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
       extension_user_stylesheet.replaceSync('');
       end_coloring();
     }
-
-    if(message.msg == 'THERE?'){
-      let [ tab, tab_idx ] = getActiveTab();
-      let bg_txt = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
-
-
-      console.log('----COLOIRNG!!!---START!!!!!!!!');
-      begin_coloring();
+    if(message.msg == 'COLOR_SCRIPT?'){
+      sendResponse( { msg: 'COLORING_HERE'} );
+      if(message.stat != 'COL'){
+        console.log('----COLOIRNG!!!---START!!!!!!!!');
+        begin_coloring();
+      }
     }
 
   }
 
 );
-
-async function getActiveTab(){
-
-  let tab = await chrome.tabs.query( { lastFocusedWindow:true } );
-  let tab_idx = 0;
-
-  for(let i=0; i < tab.length;++i){
-    if(tab[i].active == true){
-      tab_idx = i;
-      break;
-    }
-  }
-
-  return [tab, tab_idx];
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 let extension_user_stylesheet = new CSSStyleSheet();
 let extension_stylesheet = new CSSStyleSheet();

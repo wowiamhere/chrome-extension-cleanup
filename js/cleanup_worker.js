@@ -32,7 +32,7 @@ const reg = /[\W_]/g;
 chrome.contextMenus.onClicked.addListener( handleSelection );
 
 function handleSelection(info){
-
+console.log("*****************************",info);
 	switch (info.menuItemId){
 	case 'youtube':
 		search_site('https://youtube.com/results?search_query=', info.selectionText);
@@ -58,11 +58,29 @@ function handleSelection(info){
 	case 'delete/Stop':
 		delete_element();
 		break;
-	case 'color ON/OFF':
+	case 'START':
 		start_coloring();
+		break;
+	case 'CLOSE':
+		stop_coloring();
+		break;
+	case 'BACK':
+		coloring_back();
+		break;
+	case 'SAVE':
+		coloring_save();
+		break;
+	case 'RESTORE':
+		coloring_redo();
+		break;
+	case 'RESET_ALL':
+		coloring_reset_all();
+		break;
+	case 'RESET_THIS':
+		coloring_reset_this();
+		break;
 	}
 }
-
 
 
 let items = [ 
@@ -77,6 +95,7 @@ let items = [
 	'color ON/OFF' 
 	];
 let items_coloring = [ 
+	'START',
 	'CLOSE', 
 	'BACK', 
 	'SAVE', 
@@ -103,6 +122,59 @@ for(let i = 0; i < items_coloring.length; ++i){
 
 }
 
+async function start_coloring(){
+	let [tab, tab_idx] = await getActiveTab();
+	let stat = chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
+	await chrome.tabs.sendMessage( tab[tab_idx].id, {msg:'COLOR_SCRIPT?', stat: stat }, coloring_are_you_there);
+}
+
+async function coloring_are_you_there( resp ){
+console.log("**********COLOR RESP***************-> ", resp);
+	if(resp == undefined && chrome.runtime.lastError ){
+console.log("!!!!!!!!!!!!!!!!!!!INJECT COLORING!!!!!!!!!____>");
+		let [tab, tab_idx] = await getActiveTab();
+		
+		chrome.scripting.executeScript({
+			files: ['js/background_color.js'],
+			injectImmediately: true,
+			target: { tabId: tab[tab_idx].id }
+		});
+		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
+		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
+	}
+	else{
+		let [tab, tab_idx] = await getActiveTab();
+		if(chrome.action.getBadgeText( { tabId: tab[tab_idx].id } ) != 'COL' ){
+			chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
+			chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
+		}
+	}
+
+}
+
+async function stop_coloring(){
+	let [ tab, tab_idx ] = await getActiveTab();
+	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'CLOSE' } );
+	chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: ''} );
+	chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "" });
+}
+
+async function coloring_back(){
+	return;
+}
+async function coloring_save(){
+	return;
+}
+async function coloring_redo(){
+	return;
+} 
+async function coloring_reset_all(){
+	return;
+}
+async function coloring_reset_this(){
+	return;
+}
+
 async function delete_element(){
 	let [tab, tab_idx] = await getActiveTab();
 	
@@ -113,13 +185,13 @@ async function delete_element(){
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "" } );
 		return;
 	}else
-		await chrome.tabs.sendMessage( tab[tab_idx].id, {msg:"THERE?"}, are_you_there);
+		await chrome.tabs.sendMessage( tab[tab_idx].id, {msg:"DELETE_SCRIPT?"}, delete_are_you_there);
 }
 
-async function are_you_there( resp ){
+async function delete_are_you_there( resp ){
 
 	if(resp == undefined && chrome.runtime.lastError ){
-console.log("!!!!!!!!!!!!!!!!!!!INJECT!!!!!!!!!____>");
+console.log("!!!!!!!!!!!!!!!!!!!INJECT DELETE !!!!!!!!!____>");
 		let [tab, tab_idx] = await getActiveTab();
 		
 		chrome.scripting.executeScript({
@@ -127,25 +199,17 @@ console.log("!!!!!!!!!!!!!!!!!!!INJECT!!!!!!!!!____>");
 			injectImmediately: true,
 			target: {tabId: tab[tab_idx].id}
 		});
+		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'red'} );		
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text:"DEL" } );
 
 	}
 	else{
 		let [tab, tab_idx] = await getActiveTab();
+		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'red'} );		
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text:"DEL" } );
 	}
 }
 
-async function start_coloring(){
-	let [tab, tab_idx] = await getActiveTab();
-
-	chrome.scripting.executeScript({
-		files: [ 'js/background_color.js' ],
-		injectImmediately: true,
-		target: { tabId: tab[tab_idx].id }
-	});
-	chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "ON"} );
-}
 
 
 

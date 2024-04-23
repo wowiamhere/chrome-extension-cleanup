@@ -1,3 +1,4 @@
+/*
 let extension_stylesheet = new CSSStyleSheet();
 
 document.adoptedStyleSheets = [ extension_stylesheet ];
@@ -153,15 +154,6 @@ async function set_badge(txt, txt_col, bg_col, tb_id){
   await chrome.action.setBadgeTextColor( { color: txt_col, tabId: tb_id } );
   await chrome.action.setBadgeBackgroundColor( { color: bg_col, tabId: tb_id } );
 }
-
-
-
-
-
-
-
-
-
-
+*/
 
 
