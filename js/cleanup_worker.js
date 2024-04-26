@@ -142,7 +142,7 @@ function color_getter(){
 	color_button.type = 'button';
 	color_button.innerText = 'CHOOSE COLOR';
 	color_button.value = 'rgb(171,171,171)';
-	color_button.form = color_element.id;
+	color_button.style = 'position:relative;display:block;margin:auto;';
 
 	color_button.addEventListener( 'click' , (ev) => {
 		bg_color = document.querySelector('#color_choose').value;
