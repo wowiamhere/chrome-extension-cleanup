@@ -4,14 +4,26 @@
 
 #### Web Page Background Color   
 Hover over any part of a Web Page and change it's background color.   
-Injects Css and Javascript modifying web page background to any desired color to lessen impact on eyes.   
+Injects Css and Javascript modifying web page background to any desired color to lessen impact on eyes.  
+*Stops* coloring functionality,   
+*Deletes* previous color modification,   
+*Saves* the current background color modifications as ***CSS*** in *chrome.local.storage* for future visits to Web Page.   
+*Rmoves* color modifications from Web Page ( RESTORES TO ORIGINAL CONTNET ).   
+*Restore* restores a Web Page color modifications from *local.storage*.   
+*Clear storage* deletes ALL entries from ALL web pages from *local.storage*.   
+*Clear Website* deletes ONLY current web pages user color CSS from *local.storage*   
+
 
 #### Web Page Text Manipulation   
-Takes selected text from any web page and either searches youtube, google or amazon, manipulates selected text or returs the ***src=*** attribute of an DOM element.   
+Takes selected text from any web page and searches youtube, google or amazon, manipulates selected text returning modified string.   
+
+#### SRC Attribute   
+Hove over any element with a ***SRC*** attribute and returns the string.   
+
 
 #### Web Page Element Deletion   
 Hover over any element and it's border highlithes ***RED***, it's *First Child* ***GREEN*** and all it's children ***BLACK***.   
-Click on the ***PARENT*** (GREEN) to delete it and it's children from the DOM.
+Click on the ***PARENT*** (RED) to delete it and it's children from the DOM.
 
 
 
@@ -64,7 +76,8 @@ chrome.scripting
 chrome.action   
 chrome.tabs   
 chrome.runtime   
-chrome.contextMenus   
+chrome.contextMenus  
+chrome.local.storage    
 ```
  
 ## DOM / Javascript  
