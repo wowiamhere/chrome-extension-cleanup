@@ -31,9 +31,9 @@ Click on the ***PARENT*** (RED) to delete it and it's children from the DOM.
 
 
 ***Upon activation***  
-Adds EventListeners to Web page.
-Deactivates all links. 
-**USER can click anywhere on the page, including links.**  
+Adds EventListeners to Web page.   
+Deactivates all links.   
+**USER can click anywhere on the page, including links.**   
   
 ***Upon deactivation***  
 All links are re-activated,  
