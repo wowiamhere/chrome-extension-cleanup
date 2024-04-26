@@ -8,13 +8,13 @@ Injects Css and Javascript modifying web page background to any desired color to
 
 *ADDS right click menu items* ***:***   
 
-*Stops* coloring functionality,   
-*Deletes* previous color modification,   
-*Saves* the current background color modifications as ***CSS*** in *chrome.local.storage* for future visits to Web Page.   
-*Rmoves* color modifications from Web Page ( RESTORES TO ORIGINAL CONTNET ).   
-*Restore* restores a Web Page color modifications from *local.storage*.   
-*Clear storage* deletes ALL entries from ALL web pages from *local.storage*.   
-*Clear Website* deletes ONLY current web pages user color CSS from *local.storage*   
+**Stops** coloring functionality,   
+**Deletes** previous color modification,   
+**Saves** the current background color modifications as ***CSS*** in *chrome.local.storage* for future visits to Web Page.   
+**Rmoves** color modifications from Web Page ( RESTORES TO ORIGINAL CONTNET ).   
+**Restore** restores a Web Page color modifications from *local.storage*.   
+**Clear storage** deletes ALL entries from ALL web pages from *local.storage*.   
+**Clear Website** deletes ONLY current web pages user color CSS from *local.storage*   
 
 
 #### Web Page Text Manipulation   
