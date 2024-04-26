@@ -5,6 +5,9 @@
 #### Web Page Background Color   
 Hover over any part of a Web Page and change it's background color.   
 Injects Css and Javascript modifying web page background to any desired color to lessen impact on eyes.  
+
+*ADDS right click menu items* ***:***   
+
 *Stops* coloring functionality,   
 *Deletes* previous color modification,   
 *Saves* the current background color modifications as ***CSS*** in *chrome.local.storage* for future visits to Web Page.   
