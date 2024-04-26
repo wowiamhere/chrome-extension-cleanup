@@ -171,7 +171,16 @@ function get_selector(nodes){
 ///////////// THIS IS FOR COLORING
 ///////////// RECEIVES MESSGE FROM WORKER AND STARTS COLORING
 
-let bg_color;
+let bg_color = '#ababab';
+
+function opacity_children(op){
+  let children = document.body.children;
+  for(let i=0;i<children.length;++i){
+    console.log(children[i]);
+    children[i].style.opacity = op;
+  } 
+}
+
 
 async function begin_coloring(){
   check_db();
@@ -185,16 +194,7 @@ function end_coloring(){
   document.body.removeEventListener('click', body_listener);
 }
 
-function handle_links(to_do){
-  if(to_do == 'kill'){
-    if(!extension_stylesheet.cssRules[0])
-      extension_stylesheet.insertRule('a{pointer-events:none !important;}');
-  }
-  else{
-    if(extension_stylesheet.cssRules.length > 0)
-      extension_stylesheet.deleteRule(0);
-  }
-}
+
 
 function body_listener(ev){
 
@@ -224,32 +224,6 @@ function body_listener(ev){
     }else
     return undefined;
 }
-
-function get_selector(nodes){
-
-  let selector_array = [];
-  let idx;
-  let nodes_arr = [];
-
-  nodes_arr = Array.from(nodes);
-  nodes_arr.shift();
-
-  selector_array = Array.prototype.map.call( nodes_arr, (node) => {
-
-    idx = Array.prototype.indexOf.call( node.parentElement.children, node ) + 1;
-
-    if(node.id)
-      return node.tagName.toLowerCase() + '#' + node.id.substring(0, node.id.indexOf(' ') ? node.id.length : node.id.indexOf(' ') ) + ':nth-child(' + idx + ')';
-    if(node.className)
-      return node.tagName.toLowerCase() + '.' + node.classList[0] + ':nth-child(' + idx + ')';
-    else
-      return node.tagName.toLowerCase() != 'body' ? '> ' + node.tagName.toLowerCase() + ':nth-child(' + idx + ')' : node.tagName.toLowerCase() + ':nth-child(' + idx + ')' ;
-
-  });
-
-  return selector_array.join(' ');
-}
-
 
 function check_sheet(slctr){
   

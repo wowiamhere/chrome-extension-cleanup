@@ -9,10 +9,11 @@ Injects Css and Javascript modifying web page background to any desired color to
 *ADDS right click menu items* ***:***   
 
 **Stops** coloring functionality,   
+**Color** launches a color chooser for custom coloring,
 **Deletes** previous color modification,   
 **Saves** the current background color modifications as ***CSS*** in *chrome.local.storage* for future visits to Web Page.   
 **Rmoves** color modifications from Web Page ( RESTORES TO ORIGINAL CONTNET ).   
-**Restore** restores a Web Page color modifications from *local.storage*.   
+**Restore Saved** restores a Web Page color modifications from *local.storage*.   
 **Clear storage** deletes ALL entries from ALL web pages from *local.storage*.   
 **Clear Website** deletes ONLY current web pages user color CSS from *local.storage*   
 
@@ -29,7 +30,6 @@ Hover over any element and it's border highlithes ***RED***, it's *First Child* 
 Click on the ***PARENT*** (RED) to delete it and it's children from the DOM.
 
 
-
 ***Upon activation***  
 Adds EventListeners to Web page.   
 Deactivates all links.   
@@ -44,10 +44,11 @@ EventListeners are removed.
 ***COLOR ON/OFF***   
 - *START*   
 - *STOP*   
+- *COLOR*   
 - *BACK*   
 - *SAVE*   
 - *REMOVE_CSS*   
-- *RESTORE_CSS*   
+- *RESTORE_SAVED_CSS*   
 - *CLEAR_STORAGE*
 - *CLEAR_WEBSITE*       
 

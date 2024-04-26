@@ -38,6 +38,9 @@ async function handleSelection(info){
 	case 'STOP':
 		coloring_func('COLORING_OFF');
 		break;
+	case 'COLOR':
+		get_color('COLOR');
+		break;
 	case 'BACK':
 		coloring_func('COLORING_BACK');
 		break;
@@ -47,8 +50,8 @@ async function handleSelection(info){
 	case 'REMOVE_CSS':
 		coloring_func('COLORING_REMOVE_CSS');
 		break;
-	case 'RESTORE_CSS':
-		coloring_func('COLORING_RESTORE_CSS');
+	case 'RESTORE_SAVED_CSS':
+		coloring_func('COLORING_RESTORE_SAVED_CSS');
 		break;
 	case 'CLEAR_STORAGE':
 		coloring_func('COLORING_CLEAR_STORAGE');
@@ -76,11 +79,12 @@ let items = [
 // 						ARRAY FOR COLORING RIGHT CLICK MENU
 let items_coloring = [ 
 	'START',
-	'STOP', 
+	'STOP',
+	'COLOR', 
 	'BACK', 
 	'SAVE', 
 	'REMOVE_CSS',
-	'RESTORE_CSS', 
+	'RESTORE_SAVED_CSS', 
 	'CLEAR_STORAGE', 
 	'CLEAR_WEBSITE'
 	];
@@ -103,6 +107,59 @@ for(let i = 0; i < items_coloring.length; ++i){
 	});
 
 }
+
+
+async function get_color(){
+	let [ tab, tab_idx, w_id ] = await getActiveTab();
+	let stat = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
+
+	if( stat == 'COL')
+		await chrome.scripting.executeScript({
+			target: { tabId: tab[tab_idx].id },
+			injectImmediately: true,
+			func: color_getter
+		});
+}
+
+
+function color_getter(){
+
+	let color_element_div = document.createElement('div');
+	color_element_div.id = 'color_element_div';
+
+	let color_element = document.createElement('input');
+	color_element.type = 'color';
+	color_element.value = '#ababab';
+	color_element.id = 'color_choose';
+	color_element.style = 'width: 30vw;height: 10vw;position: relative;margin: auto;display: block;';
+
+	color_element.addEventListener( 'click', (ev) => { 
+		color_button.value = ev.srcElement.value;
+	});
+
+	let color_button = document.createElement('button');
+	color_button.name = 'color_choose_button';
+	color_button.type = 'button';
+	color_button.innerText = 'CHOOSE COLOR';
+	color_button.value = 'rgb(171,171,171)';
+	color_button.form = color_element.id;
+
+	color_button.addEventListener( 'click' , (ev) => {
+		bg_color = document.querySelector('#color_choose').value;
+		color_element_div.remove();
+		opacity_children('100%');
+	});
+
+	color_element_div.append( color_element );
+	color_element_div.append( color_button );
+
+	children = document.body.children;
+	opacity_children('20%');
+
+	document.body.insertBefore( color_element_div , children[0] );
+
+}
+
 
 //					GETS THE STATUS OF THE BADGE (IS APP IN COLORING OR DELETING MODE)
 async function get_stat(){
@@ -156,6 +213,7 @@ async function coloring_func(to_do){
 	let [ tab, tab_idx ] = await getActiveTab();
 	
 	let stat = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
+
 	if( stat == 'COL'){
 		
 		if( to_do == 'COLORING_OFF' || to_do == 'COLORING_SAVE' || to_do == 'COLORING_REMOVE_WEBSITE'){
@@ -165,6 +223,20 @@ async function coloring_func(to_do){
 		}
 		else{
 			await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );
+		}
+	}else{
+		if( to_do == 'COLORING_REMOVE_CSS' || to_do == 'COLORING_RESTORE_SAVED_CSS' ){
+			await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, async (resp) => {
+				if( resp == undefined && chrome.runtime.lastError ){
+					await chrome.scripting.executeScript({
+						files: ['js/extension_functions.js'],
+						injectImmediately: true,
+						target: { tabId: tab[tab_idx].id }
+					});
+					await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );
+				}
+			} );
+
 		}
 	}
 }
@@ -271,11 +343,12 @@ async function getActiveTab(){
 	for(let i=0; i < tab.length;++i){
 		if(tab[i].active == true){
 			tab_idx = i;
+			w_id = tab[i].windowId;
 			break;
 		}
 	}
 
-	return [tab, tab_idx];
+	return [tab, tab_idx, w_id];
 }
 
 async function showTxt(txt_to_show, tab, tab_idx){
