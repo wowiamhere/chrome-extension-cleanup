@@ -2,14 +2,10 @@
 chrome.runtime.onMessage.addListener(
   async (message, sender, sendResponse) =>{
 
-//    console.log( 'chrome.storage.local -> ',await chrome.storage.local.get() );
-    console.log('-----------MSG______________> ', message);
-
     if(message.msg == 'CLOSE'){
       console.log('----DONE @@@@@@@@@@');
       end_coloring();
     }
-
     if(message.msg == 'COLOR')
       //bg_color = message.color;
 

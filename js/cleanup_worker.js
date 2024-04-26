@@ -1,38 +1,10 @@
-chrome.runtime.onMessage.addListener(
-
-	async (message, sender, sendResponse) => {
-/*
-			try{
-		
-				await chrome.tabs.sendMessage( message.tab_id, 
-					{ stat: 'ARE_YOU_THERE'});
-			}
-			catch{
-
-				await chrome.scripting.executeScript({
-					target: { tabId: message.tab_id },
-					files: [ 'js/background_color.js' ],
-					injectImmediately: true,
-				});
-
-			}
-*/
-
-
-
-	}
-
-);
-
-
-// BELOW: FOR RIGHT CLICK MENU
-
 const reg = /[\W_]/g;
 
 chrome.contextMenus.onClicked.addListener( handleSelection );
 
-function handleSelection(info){
-console.log("*****************************",info);
+
+///        CALLBACK FUNCTION TO contextMenu.onClicked.addListener
+async function handleSelection(info){
 	switch (info.menuItemId){
 	case 'youtube':
 		search_site('https://youtube.com/results?search_query=', info.selectionText);
@@ -56,34 +28,41 @@ console.log("*****************************",info);
 		get_file_src(info);
 		break;
 	case 'delete/Stop':
-		delete_element();
+		if ( await get_stat() != 'COL' )
+			delete_element();
 		break;
 	case 'START':
-		start_coloring();
+		if( await get_stat() != 'DEL' )
+			start_coloring('START_COLORING');
 		break;
-	case 'CLOSE':
-		stop_coloring();
+	case 'STOP':
+		coloring_func('COLORING_OFF');
 		break;
 	case 'BACK':
-		coloring_back();
+		coloring_func('COLORING_BACK');
 		break;
 	case 'SAVE':
-		coloring_save();
+		coloring_func('COLORING_SAVE');
 		break;
-	case 'RESTORE':
-		coloring_redo();
+	case 'REMOVE_CSS':
+		coloring_func('COLORING_REMOVE_CSS');
 		break;
-	case 'RESET_ALL':
-		coloring_reset_all();
+	case 'RESTORE_CSS':
+		coloring_func('COLORING_RESTORE_CSS');
 		break;
-	case 'RESET_THIS':
-		coloring_reset_this();
+	case 'CLEAR_STORAGE':
+		coloring_func('COLORING_CLEAR_STORAGE');
+		break;
+	case 'CLEAR_WEBSITE':
+		coloring_func('COLORING_REMOVE_WEBSITE');
 		break;
 	}
 }
 
 
+//                           ARRAY FOR RIGHT-CLICK MENU
 let items = [ 
+	'COLOR ON/OFF',
 	'delete/Stop', 
 	'youtube', 
 	'amazon', 
@@ -91,19 +70,22 @@ let items = [
 	'fileName', 
 	'camelCase', 
 	'underscore', 
-	'src', 
-	'color ON/OFF' 
-	];
-let items_coloring = [ 
-	'START',
-	'CLOSE', 
-	'BACK', 
-	'SAVE', 
-	'RESTORE', 
-	'RESET_ALL', 
-	'RESET_THIS'
+	'src'
 	];
 
+// 						ARRAY FOR COLORING RIGHT CLICK MENU
+let items_coloring = [ 
+	'START',
+	'STOP', 
+	'BACK', 
+	'SAVE', 
+	'REMOVE_CSS',
+	'RESTORE_CSS', 
+	'CLEAR_STORAGE', 
+	'CLEAR_WEBSITE'
+	];
+
+//                           CREATING RIGHT CLICK MENUS
 for(let i = 0; i < items.length; ++i){
 	chrome.contextMenus.create({
 		title: items[i],
@@ -117,117 +99,122 @@ for(let i = 0; i < items_coloring.length; ++i){
 		title: items_coloring[i],
 		contexts: ['all'],
 		id: items_coloring[i],
-		parentId: 'color ON/OFF'
+		parentId: 'COLOR ON/OFF'
 	});
 
 }
 
-async function start_coloring(){
+//					GETS THE STATUS OF THE BADGE (IS APP IN COLORING OR DELETING MODE)
+async function get_stat(){
 	let [tab, tab_idx] = await getActiveTab();
-	let stat = chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
-	await chrome.tabs.sendMessage( tab[tab_idx].id, {msg:'COLOR_SCRIPT?', stat: stat }, coloring_are_you_there);
+	return await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
 }
 
+
+//                     FUNCTIONS FOR COLORING FUNCTIONALITY
+async function start_coloring(){
+	let [tab, tab_idx] = await getActiveTab();
+	let stat = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
+
+	if( stat !=='COL')
+		await chrome.tabs.sendMessage( tab[tab_idx].id, { msg:'INJECTED?' }, coloring_are_you_there);
+}
+
+
+//			CALLBACK TO MESSAGE FOR INSERTING THE MAIN CONTENT SCRIPT INTO TAB IN start_coloring()
 async function coloring_are_you_there( resp ){
-console.log("**********COLOR RESP***************-> ", resp);
+
+//				IF NO RESPONSE AND ERROM SET FROM CALL TO SCRIPT; SCRIPT NEEDS TO BE INSERTED
 	if(resp == undefined && chrome.runtime.lastError ){
-console.log("!!!!!!!!!!!!!!!!!!!INJECT COLORING!!!!!!!!!____>");
 		let [tab, tab_idx] = await getActiveTab();
-		
-		chrome.scripting.executeScript({
-			files: ['js/background_color.js'],
+		await chrome.scripting.executeScript({
+			files: ['js/extension_functions.js'],
 			injectImmediately: true,
 			target: { tabId: tab[tab_idx].id }
 		});
+//          UPON INSERTION, ACTIVATION OF APP BADGE AND FUNCTIONALITY FOLLOW
 		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
+		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING' } );
 	}
 	else{
+//			IF RESPONSE FROM SCRIPT RECEIVED THE SCRIPT ALREADY INSERTED
+//			SETTING BADGE AND SENDING MESSAGE TO START FUNCTIONALITY		
 		let [tab, tab_idx] = await getActiveTab();
 		if(chrome.action.getBadgeText( { tabId: tab[tab_idx].id } ) != 'COL' ){
+		   	chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
 			chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
-			chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
+			chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING' })			
 		}
 	}
 
 }
 
-async function stop_coloring(){
+//		USED WHEN RIGHT CLICKE MENU ITEM CLICKED WITH to_do FUNCTIONALITY
+//		SENDS MESSAGE TO CONTENT SCRIPT AND SETS BADGES FOR FUNCTIONALITY
+async function coloring_func(to_do){
 	let [ tab, tab_idx ] = await getActiveTab();
-	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'CLOSE' } );
-	chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: ''} );
-	chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "" });
+	
+	let stat = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
+	if( stat == 'COL'){
+		
+		if( to_do == 'COLORING_OFF' || to_do == 'COLORING_SAVE' || to_do == 'COLORING_REMOVE_WEBSITE'){
+			await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );
+			chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: ''} );
+			chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "" });
+		}
+		else{
+			await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );
+		}
+	}
 }
 
-async function coloring_back(){
-	return;
-}
-async function coloring_save(){
-	return;
-}
-async function coloring_redo(){
-	return;
-} 
-async function coloring_reset_all(){
-	return;
-}
-async function coloring_reset_this(){
-	return;
-}
 
+//		WHEN RIGHT CLICKE MENU ITEM CLICKED CHECKS BADGE AND SENDS MESSAGE TO 
+//			CONTENT SCRIPT TO EXECUTE FUNCTIONALITY
 async function delete_element(){
 	let [tab, tab_idx] = await getActiveTab();
 	
 	let stat = await chrome.action.getBadgeText( { tabId:tab[tab_idx].id } );
 	if(stat == "DEL"){
-		let [tab, tab_idx] = await getActiveTab();		
-		await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'OFF' } );		
-		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "" } );
+		let [tab, tab_idx] = await getActiveTab();	
+		await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'DELETE_OFF' } );		
+		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: ''} );		
+		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: '' } );
 		return;
 	}else
-		await chrome.tabs.sendMessage( tab[tab_idx].id, {msg:"DELETE_SCRIPT?"}, delete_are_you_there);
+		await chrome.tabs.sendMessage( tab[tab_idx].id, {msg:"INJECTED?"}, delete_script);
 }
 
-async function delete_are_you_there( resp ){
+
+//		CALLBACK TO MESSAGE SENT TO CONTENT SCRIPT FROM delete_element() FUNCTION ABOVE
+//		IF NOT PRESENT, INSERTS SCRIPT AND SETS APP BADGE
+//		SENDS MESSAGE BACK TO START FUNCTIONALITY
+async function delete_script( resp ){
 
 	if(resp == undefined && chrome.runtime.lastError ){
-console.log("!!!!!!!!!!!!!!!!!!!INJECT DELETE !!!!!!!!!____>");
 		let [tab, tab_idx] = await getActiveTab();
 		
-		chrome.scripting.executeScript({
-			files: ['js/delete_element.js'],
+		await chrome.scripting.executeScript({
+			files: ['js/extension_functions.js'],
 			injectImmediately: true,
 			target: {tabId: tab[tab_idx].id}
 		});
 		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'red'} );		
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text:"DEL" } );
+		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_DELETING' });
 
 	}
 	else{
 		let [tab, tab_idx] = await getActiveTab();
 		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'red'} );		
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text:"DEL" } );
+		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_DELETING' });
 	}
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//		FUNCTIONS FOR SEARCHING WEBSITE, MANIPULATING SELECTED TEXT AND RETURNING src PROPERTY OF ELEMENT
 
 async function search_site(url, to_search){
 	let [tab, tab_idx] = await getActiveTab();
