@@ -33,7 +33,7 @@ chrome.runtime.onMessage.addListener(
     else if(message.msg == 'COLORING_REMOVE_CSS'){
       clear_css();
     }
-    else if(message.msg == 'COLORING_RESTORE_CSS'){
+    else if(message.msg == 'COLORING_RESTORE_SAVED_CSS'){
       restore_last();
     }
     else if(message.msg == 'COLORING_CLEAR_STORAGE'){
@@ -180,7 +180,6 @@ function opacity_children(op){
     children[i].style.opacity = op;
   } 
 }
-
 
 async function begin_coloring(){
   check_db();

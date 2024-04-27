@@ -134,6 +134,7 @@ function color_getter(){
 	color_element.style = 'width: 30vw;height: 10vw;position: relative;margin: auto;display: block;';
 
 	color_element.addEventListener( 'click', (ev) => { 
+		ev.stopPropagation();
 		color_button.value = ev.srcElement.value;
 	});
 
@@ -144,11 +145,14 @@ function color_getter(){
 	color_button.value = 'rgb(171,171,171)';
 	color_button.style = 'position:relative;display:block;margin:auto;';
 
-	color_button.addEventListener( 'click' , (ev) => {
+	color_button.addEventListener( 'click' , color_button_click, {once:false});
+
+	function color_button_click(ev){
+		ev.stopPropagation();
 		bg_color = document.querySelector('#color_choose').value;
 		color_element_div.remove();
 		opacity_children('100%');
-	});
+	};
 
 	color_element_div.append( color_element );
 	color_element_div.append( color_button );
