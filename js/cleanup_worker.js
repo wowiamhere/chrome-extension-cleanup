@@ -123,18 +123,19 @@ async function get_color(){
 
 
 function color_getter(){
-
+  document.body.removeEventListener('click', body_listener);
 	let pos = window.pageYOffset;
 	let color_element_div = document.createElement('div');
 	color_element_div.id = 'color_element_div';
-	pos = 'position:absolute;top:' + pos + 'px;';
-	color_element_div.style = pos;
+	color_element_div_css = 'position:absolute; top:' + pos + 'px; background-color:black;';
+	color_element_div.style = color_element_div_css;
 
 	let color_element = document.createElement('input');
 	color_element.type = 'color';
 	color_element.value = '#ababab';
 	color_element.id = 'color_choose';
-	color_element.style = 'width: 30vw;height: 10vw;position: relative;margin: auto;display: block;opacity:100%;';
+	let color_element_css = 'width:30vw; height:10vw;display:block; border-radius:5vw; overflow:hidden; appearance:none; background:none; border:none; cursor:copy; padding:0;';
+	color_element.style = color_element_css;
 
 	color_element.addEventListener( 'click', (ev) => { 
 		ev.stopPropagation();
@@ -146,7 +147,8 @@ function color_getter(){
 	color_button.type = 'button';
 	color_button.innerText = 'CHOOSE COLOR';
 	color_button.value = 'rgb(171,171,171)';
-	color_button.style = 'position:relative;display:block;margin:auto;opacity:100%;';
+	let color_button_css = 'position:relative;display:block;margin:auto;border-radius:5vw;overflow:hidden;' 
+	color_button.style = color_button_css;
 
 	color_button.addEventListener( 'click' , color_button_click, {once:false});
 
@@ -155,6 +157,7 @@ function color_getter(){
 		bg_color = document.querySelector('#color_choose').value;
 		color_element_div.remove();
 		opacity_children('100%');
+  		document.body.addEventListener('click', body_listener);		
 	};
 
 	color_element_div.append( color_element );
