@@ -51,7 +51,7 @@ chrome.runtime.onMessage.addListener(
 console.log('----SCRIPT INJECTED #############3');
 
 // STYLE SHEET FOR DELETE FUNCTIONALITY
-let extension_stylesheet_delete_element = new CSSStyleSheet();
+let extension_stylesheet_misc = new CSSStyleSheet();
 
 // STYLE SHEET FOR COLORING
 let extension_user_stylesheet = new CSSStyleSheet();
@@ -62,7 +62,7 @@ let extension_stylesheet = new CSSStyleSheet();
 document.adoptedStyleSheets = [ 
   extension_stylesheet, 
   extension_user_stylesheet, 
-  extension_stylesheet_delete_element ];
+  extension_stylesheet_misc ];
 
 
 /////
@@ -132,12 +132,12 @@ function all_children(to_do){
 
 function handle_links(to_do){
   if(to_do == 'kill'){
-    if(!extension_stylesheet_delete_element.cssRules[0])
-      extension_stylesheet_delete_element.insertRule('a{pointer-events:none !important;}');
+    if(!extension_stylesheet_misc.cssRules[0])
+      extension_stylesheet_misc.insertRule('a{pointer-events:none !important;}');
   }
   else{
-    if(extension_stylesheet_delete_element.cssRules.length > 0)
-      extension_stylesheet_delete_element.deleteRule(0);
+    if(extension_stylesheet_misc.cssRules.length > 0)
+      extension_stylesheet_misc.deleteRule(0);
   }
 }
 

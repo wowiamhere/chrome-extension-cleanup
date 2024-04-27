@@ -124,14 +124,17 @@ async function get_color(){
 
 function color_getter(){
 
+	let pos = window.pageYOffset;
 	let color_element_div = document.createElement('div');
 	color_element_div.id = 'color_element_div';
+	pos = 'position:absolute;top:' + pos + 'px;';
+	color_element_div.style = pos;
 
 	let color_element = document.createElement('input');
 	color_element.type = 'color';
 	color_element.value = '#ababab';
 	color_element.id = 'color_choose';
-	color_element.style = 'width: 30vw;height: 10vw;position: relative;margin: auto;display: block;';
+	color_element.style = 'width: 30vw;height: 10vw;position: relative;margin: auto;display: block;opacity:100%;';
 
 	color_element.addEventListener( 'click', (ev) => { 
 		ev.stopPropagation();
@@ -143,7 +146,7 @@ function color_getter(){
 	color_button.type = 'button';
 	color_button.innerText = 'CHOOSE COLOR';
 	color_button.value = 'rgb(171,171,171)';
-	color_button.style = 'position:relative;display:block;margin:auto;';
+	color_button.style = 'position:relative;display:block;margin:auto;opacity:100%;';
 
 	color_button.addEventListener( 'click' , color_button_click, {once:false});
 
@@ -160,7 +163,7 @@ function color_getter(){
 	children = document.body.children;
 	opacity_children('20%');
 
-	document.body.insertBefore( color_element_div , children[0] );
+	document.body.append( color_element_div );
 
 }
 
