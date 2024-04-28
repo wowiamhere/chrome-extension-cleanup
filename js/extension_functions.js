@@ -1,7 +1,7 @@
 chrome.runtime.onMessage.addListener( 
    async (message, sender, sendResponse) => {
-
     sendResponse( { msg: 'SCRIPT_ALREADY_INJECTED'} );
+console.log('glitchglitchglitchglitchxxxxxx-->', message );
 
 /////
 ///// THIS IS FOR DELETING ELEMENTS IN THE WEBPAGE
@@ -272,7 +272,10 @@ async function restore_last(){
 
     }
   }
-  document.adoptedStyleSheets = [ extension_stylesheet, extension_user_stylesheet];
+  document.adoptedStyleSheets = [ 
+  extension_stylesheet, 
+  extension_user_stylesheet, 
+  extension_stylesheet_misc ];
 console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse() * 10**-6) );
 }
 

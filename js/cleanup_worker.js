@@ -202,7 +202,7 @@ async function coloring_are_you_there( resp ){
 //          UPON INSERTION, ACTIVATION OF APP BADGE AND FUNCTIONALITY FOLLOW
 		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
-		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING' } );
+		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING', x: tab[tab_idx].id } );
 	}
 	else{
 //			IF RESPONSE FROM SCRIPT RECEIVED THE SCRIPT ALREADY INSERTED
@@ -211,7 +211,7 @@ async function coloring_are_you_there( resp ){
 		if(chrome.action.getBadgeText( { tabId: tab[tab_idx].id } ) != 'COL' ){
 		   	chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
 			chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
-			chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING' })			
+			chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING', x: tab[tab_idx].id });
 		}
 	}
 
@@ -244,7 +244,10 @@ async function coloring_func(to_do){
 						target: { tabId: tab[tab_idx].id }
 					});
 					await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );
+				}else{
+					await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );
 				}
+
 			} );
 
 		}
