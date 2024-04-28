@@ -176,7 +176,6 @@ let bg_color = '#ababab';
 function opacity_children(op){
   let children = document.body.children;
   for(let i=0;i<children.length;++i){
-    console.log(children[i]);
     children[i].style.opacity = op;
   } 
 }

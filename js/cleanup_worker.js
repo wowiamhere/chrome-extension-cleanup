@@ -56,7 +56,7 @@ async function handleSelection(info){
 	case 'CLEAR_STORAGE':
 		coloring_func('COLORING_CLEAR_STORAGE');
 		break;
-	case 'CLEAR_WEBSITE':
+	case 'DELETE_PAGE_COLORING':
 		coloring_func('COLORING_REMOVE_WEBSITE');
 		break;
 	}
@@ -86,7 +86,7 @@ let items_coloring = [
 	'REMOVE_CSS',
 	'RESTORE_SAVED_CSS', 
 	'CLEAR_STORAGE', 
-	'CLEAR_WEBSITE'
+	'DELETE_PAGE_COLORING'
 	];
 
 //                           CREATING RIGHT CLICK MENUS
@@ -123,12 +123,21 @@ async function get_color(){
 
 
 function color_getter(){
-  document.body.removeEventListener('click', body_listener);
+  
+  	document.body.removeEventListener('click', body_listener);
+	
 	let pos = window.pageYOffset;
 	let color_element_div = document.createElement('div');
 	color_element_div.id = 'color_element_div';
 	color_element_div_css = 'position:absolute; top:' + pos + 'px; background-color:black;';
 	color_element_div.style = color_element_div_css;
+
+	document.addEventListener('scroll', get_pos, {once:false});
+	async function get_pos(ev){
+		pos =  window.pageYOffset;
+		color_element_div_css = 'position:absolute; top:' + pos + 'px; background-color:black;';
+		color_element_div.style = color_element_div_css;
+	}
 
 	let color_element = document.createElement('input');
 	color_element.type = 'color';
@@ -157,6 +166,7 @@ function color_getter(){
 		bg_color = document.querySelector('#color_choose').value;
 		color_element_div.remove();
 		opacity_children('100%');
+		document.removeEventListener('scroll', get_pos);
   		document.body.addEventListener('click', body_listener);		
 	};
 
