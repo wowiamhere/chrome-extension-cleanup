@@ -1,12 +1,18 @@
+//    SCRIPT THAT CONTAINS BACKGROUND COLORING AND ELEMENT DELETION FUNCTIONS
+//    SCRIPT RECEIVES MESSAGE, CHECKS IF ITS FOR THIS SCRIPT AND IF ALL if STATEMENTS FAIL
+//      IT ROLLS OVER TO NEXT LISTENING SCRIPT
+//     IT CHECKS THE MESSAGE FOR FUNCTIONALITY INSTRUCTION
+//    DELETES ELEMENTS AND COLORS WEB PAGE
+//    SAVES CSS DATA IN storage.local AND RETREIVES DATA TO RE-APPLIED TO WEB PAGE
+
+
 chrome.runtime.onMessage.addListener( 
    async (message, sender, sendResponse) => {
-    sendResponse( { msg: 'SCRIPT_ALREADY_INJECTED'} );
-console.log('glitchglitchglitchglitchxxxxxx-->', message );
 
-/////
-///// THIS IS FOR DELETING ELEMENTS IN THE WEBPAGE
-///// RECEIVES MSG FROM WORKER AND STARTS DELETING FUNCTION
-    if( message.msg == 'START_DELETING'){
+console.log('----EXTENSION_FUNCTIONS.JS---->', message );
+    if(message.msg == 'INJECTED?')
+      sendResponse( { msg: 'EXTENSION_FUNCTIONS_HERE'} );
+    else if( message.msg == 'START_DELETING'){
       console.log('----DELETING!!!---START!!!!!!!!');
       start_deleting();
     }
@@ -45,6 +51,9 @@ console.log('glitchglitchglitchglitchxxxxxx-->', message );
       extension_user_stylesheet.replaceSync('');
       end_coloring();
     }
+    else{
+      return;
+    }
 
 });
 
@@ -72,6 +81,8 @@ document.adoptedStyleSheets = [
 
 let sel = null;
 
+//      INSERTS BODY LISTENERS TO body ELEMENT TO HIGHLIGHT HOVERED ELEMENT UPON CLICKING ELEMENT IS DELETED
+//      DEACTIVATES ALL LINKS ON WEB PAGE
 function start_deleting(){
   handle_links('kill');
   document.body.addEventListener("mouseover", highlight_el, {once:false} );
@@ -79,6 +90,7 @@ function start_deleting(){
   document.body.addEventListener("click", delete_el, {once:false});
 }
 
+//      REMOVES LISTENERS FROM start_deleting AND REACTIVATES LINKS
 function stop_deleting(){
   remove_highlight();
   document.body.removeEventListener("mouseover", highlight_el);
@@ -87,6 +99,9 @@ function stop_deleting(){
   handle_links('open');
 }
 
+//    FUNCTION FOR eventListener mouseover FROM start_deleting
+//    UPON USER HOVERING OVER AN ELEMENT, A SELECTOR IS RETREIVED AND STORED IN GLOBAL VARIABLE AND 
+//      THE ELEMENT AND ITS CHILDRENS CSS BORDER ATTRIBUTE IS ACTIVATED TO HIGHLIGHT ELEMENT TO USER 
 function highlight_el(){
   try{
     sel = get_selector( document.querySelectorAll(':hover') );
@@ -99,6 +114,8 @@ function highlight_el(){
   catch{}
 }
 
+//      FUNCTION FOR eventListener mouseout FROM start_deleting
+//      QUERY UPON SELECTOR FROM GLOBAL SCOPE TO DEACTIVATE CSS FOR BORDER
 function remove_highlight(){
   try{
     document.querySelector( sel ).style.border = "";
@@ -111,6 +128,9 @@ function remove_highlight(){
   }
 }
 
+//      FUNCTION FOR eventListener FROM start_deleting
+//      DELETES AN ELEMENT THAT IS BEING HOVERED ON BY USER.
+//      THE ELEMENT IS ALSO BEING HIGHLITED WITH style.border CSS ATTIBUTE
 function delete_el(){
   try{
     sel = get_selector( document.querySelectorAll(':hover') );
@@ -120,6 +140,8 @@ function delete_el(){
   catch{}
 }
 
+//      HELPER FUNCTION TO ACTIVATE AND DEACTIVATE THE  style.border ATTRIBUTE OF ALL CHILDREN OF AN ELEMENT
+//        HOVERED OVER BY USER.
 function all_children(to_do){
   children = document.querySelector( sel ).children;
   for(let i=1;i < children.length;i++){
@@ -130,6 +152,8 @@ function all_children(to_do){
   }
 }
 
+//      TO BE ABLE TO CLICK ON ANY PORTION OF THE PAGE FOR DELETING AND COLORING,
+//        ALL LINKS ARE DEACTIVATED AND REACTIVATED AS NEEDED BY INSERTING A CSS RULE INTO A CUSTOM STYLE SHEET 
 function handle_links(to_do){
   if(to_do == 'kill'){
     if(!extension_stylesheet_misc.cssRules[0])
@@ -141,6 +165,7 @@ function handle_links(to_do){
   }
 }
 
+//      RECEIVES A SELECTOR AND RETURNS A STRING TO BE STORED IN storage.local
 function get_selector(nodes){
 
   let selector_array = [];
@@ -171,15 +196,11 @@ function get_selector(nodes){
 ///////////// THIS IS FOR COLORING
 ///////////// RECEIVES MESSGE FROM WORKER AND STARTS COLORING
 
+//        DEFAULT COLOR TO USE
 let bg_color = '#ababab';
 
-function opacity_children(op){
-  let children = document.body.children;
-  for(let i=0;i<children.length;++i){
-    children[i].style.opacity = op;
-  } 
-}
-
+//      CHECKS storage.local TO SEE IF THERE IS ANY CSS STYLESHEET PRESENT FOR CURRENT WEB PAGE
+//        IF NOT THEY PROCEED TO DEACTIVATE ALL LINKS IN PAGE AND ADD A click eventListener TO SELECT ELEMENTS TO CHANGE BACKGROUND COLOR
 async function begin_coloring(){
   check_db();
   bg_color = 'rgb(171,171,171)';
@@ -187,13 +208,16 @@ async function begin_coloring(){
   document.body.addEventListener("click", body_listener, {once:false} );
 }
 
+//      OPENS UP ALL LINKS AND REMOVES THE eventListener FROM begin_coloring.  STOPS ALL COLORING FUNCTIONS.
 function end_coloring(){
   handle_links('open');
   document.body.removeEventListener('click', body_listener);
 }
 
 
-
+//      FUNCTION FOR eventListener FROM begin_coloring
+//      UPON USER CLICKING, GET A RULE TO INSERT USING get_selector FOR THE ELEMENT CLICKED, CHECK storage.local TO SEE IF RULE EXISTS,
+//        AND INSERT IF NOT
 function body_listener(ev){
 
   let index;
@@ -203,20 +227,14 @@ function body_listener(ev){
   if(ev){
 
     selector = get_selector( document.querySelectorAll(':hover') );
-
     rule =  selector + '{background-color:' + bg_color + ' !important;}';
-      
     index = check_sheet( selector );
 
     if( index != undefined ){
-        
         extension_user_stylesheet.deleteRule( index );
         extension_user_stylesheet.insertRule( rule );
-        
       }else{
-        
         extension_user_stylesheet.insertRule( rule );
-        
       }
 
     }else

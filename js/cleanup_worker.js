@@ -39,7 +39,7 @@ async function handleSelection(info){
 		coloring_func('COLORING_OFF');
 		break;
 	case 'COLOR':
-		get_color('COLOR');
+		get_color('GET_COLOR');
 		break;
 	case 'BACK':
 		coloring_func('COLORING_BACK');
@@ -109,75 +109,28 @@ for(let i = 0; i < items_coloring.length; ++i){
 }
 
 
-async function get_color(){
+async function get_color(to_do){
 	let [ tab, tab_idx, w_id ] = await getActiveTab();
 	let stat = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
 
-	if( stat == 'COL')
-		await chrome.scripting.executeScript({
-			target: { tabId: tab[tab_idx].id },
-			injectImmediately: true,
-			func: color_getter
-		});
-}
+	if( stat == 'COL'){
+		await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_COLOR_INJECTED?' }, is_get_color_there );
 
+		async function is_get_color_there(resp){
+			if( resp == undefined && chrome.runtime.lastError ){
+				await chrome.scripting.executeScript({
+					target: { tabId: tab[tab_idx].id },
+					injectImmediately: true,
+					files: ['js/get_color_script.js']
+				});
 
-function color_getter(){
-  
-  	document.body.removeEventListener('click', body_listener);
-	
-	let pos = window.pageYOffset;
-	let color_element_div = document.createElement('div');
-	color_element_div.id = 'color_element_div';
-	color_element_div_css = 'position:absolute; top:' + pos + 'px; background-color:black;';
-	color_element_div.style = color_element_div_css;
+				await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do });
+			}else{
+				await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do });
+			}
+		}
 
-	document.addEventListener('scroll', get_pos, {once:false});
-	async function get_pos(ev){
-		pos =  window.pageYOffset;
-		color_element_div_css = 'position:absolute; top:' + pos + 'px; background-color:black;';
-		color_element_div.style = color_element_div_css;
 	}
-
-	let color_element = document.createElement('input');
-	color_element.type = 'color';
-	color_element.value = '#ababab';
-	color_element.id = 'color_choose';
-	let color_element_css = 'width:30vw; height:10vw;display:block; border-radius:5vw; overflow:hidden; appearance:none; background:none; border:none; cursor:copy; padding:0;';
-	color_element.style = color_element_css;
-
-	color_element.addEventListener( 'click', (ev) => { 
-		ev.stopPropagation();
-		color_button.value = ev.srcElement.value;
-	});
-
-	let color_button = document.createElement('button');
-	color_button.name = 'color_choose_button';
-	color_button.type = 'button';
-	color_button.innerText = 'CHOOSE COLOR';
-	color_button.value = 'rgb(171,171,171)';
-	let color_button_css = 'position:relative;display:block;margin:auto;border-radius:5vw;overflow:hidden;' 
-	color_button.style = color_button_css;
-
-	color_button.addEventListener( 'click' , color_button_click, {once:false});
-
-	function color_button_click(ev){
-		ev.stopPropagation();
-		bg_color = document.querySelector('#color_choose').value;
-		color_element_div.remove();
-		opacity_children('100%');
-		document.removeEventListener('scroll', get_pos);
-  		document.body.addEventListener('click', body_listener);		
-	};
-
-	color_element_div.append( color_element );
-	color_element_div.append( color_button );
-
-	children = document.body.children;
-	opacity_children('20%');
-
-	document.body.append( color_element_div );
-
 }
 
 
@@ -212,7 +165,7 @@ async function coloring_are_you_there( resp ){
 //          UPON INSERTION, ACTIVATION OF APP BADGE AND FUNCTIONALITY FOLLOW
 		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
-		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING', x: tab[tab_idx].id } );
+		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING' } );
 	}
 	else{
 //			IF RESPONSE FROM SCRIPT RECEIVED THE SCRIPT ALREADY INSERTED
@@ -221,7 +174,7 @@ async function coloring_are_you_there( resp ){
 		if(chrome.action.getBadgeText( { tabId: tab[tab_idx].id } ) != 'COL' ){
 		   	chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
 			chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
-			chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING', x: tab[tab_idx].id });
+			chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_COLORING' });
 		}
 	}
 
