@@ -213,11 +213,11 @@ async function begin_coloring(){
 
 //      OPENS UP ALL LINKS AND REMOVES THE eventListener FROM begin_coloring.  STOPS ALL COLORING FUNCTIONS.
 function end_coloring(){
-  handle_links('open');
+  remove_highlight();
   document.body.removeEventListener('click', body_listener);
-
   document.body.removeEventListener("mouseover", highlight_el);
   document.body.removeEventListener("mouseout", remove_highlight);  
+  handle_links('open');
 }
 
 
