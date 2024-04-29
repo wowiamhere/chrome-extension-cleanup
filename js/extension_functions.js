@@ -206,12 +206,18 @@ async function begin_coloring(){
   bg_color = 'rgb(171,171,171)';
   handle_links('kill');
   document.body.addEventListener("click", body_listener, {once:false} );
+
+  document.body.addEventListener("mouseover", highlight_el, {once:false} );
+  document.body.addEventListener("mouseout", remove_highlight, {once:false} );
 }
 
 //      OPENS UP ALL LINKS AND REMOVES THE eventListener FROM begin_coloring.  STOPS ALL COLORING FUNCTIONS.
 function end_coloring(){
   handle_links('open');
   document.body.removeEventListener('click', body_listener);
+
+  document.body.removeEventListener("mouseover", highlight_el);
+  document.body.removeEventListener("mouseout", remove_highlight);  
 }
 
 
