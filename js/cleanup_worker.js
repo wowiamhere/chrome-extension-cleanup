@@ -12,8 +12,8 @@ async function handleSelection(info){
 	case 'amazon':
 		search_site('https://www.amazon.com/s?k=', info.selectionText);
 		break;
-	case 'googleSearch':
-		search_site('https://www.google.com/search?q=', info.selectionText);
+	case 'imdbPro':
+		search_site('https://pro.imdb.com/api/instantSearch?retina=false&q=', info.selectionText);
 		break;
 	case 'fileName':
 		to_filename(info.selectionText);
@@ -27,24 +27,27 @@ async function handleSelection(info){
 	case 'src':
 		get_file_src(info);
 		break;
-	case 'delete/Stop':
+	case 'get_vid':
+		get_vid(info.selectionText);
+		break;
+	case 'Delete on/off':
 		if ( await get_stat() != 'COL' )
 			delete_element();
 		break;
-	case 'START':
+	case 'Start':
 		if( await get_stat() != 'DEL' )
 			start_coloring('START_COLORING');
 		break;
-	case 'STOP':
+	case 'Stop':
 		coloring_func('COLORING_OFF');
 		break;
-	case 'COLOR':
+	case 'Color':
 		get_color('GET_COLOR');
 		break;
-	case 'BACK':
+	case 'Back':
 		coloring_func('COLORING_BACK');
 		break;
-	case 'SAVE':
+	case 'Save':
 		coloring_func('COLORING_SAVE');
 		break;
 	case 'REMOVE_CSS':
@@ -65,24 +68,25 @@ async function handleSelection(info){
 
 //                           ARRAY FOR RIGHT-CLICK MENU
 let items = [ 
-	'COLOR ON/OFF',
-	'delete/Stop', 
+	'Color on/off',
+	'Delete on/off', 
 	'youtube', 
 	'amazon', 
-	'googleSearch', 
+	'imdbPro', 
 	'fileName', 
 	'camelCase', 
 	'underscore', 
-	'src'
+	'src',
+	'get_vid'
 	];
 
 // 						ARRAY FOR COLORING RIGHT CLICK MENU
 let items_coloring = [ 
-	'START',
-	'STOP',
-	'COLOR', 
-	'BACK', 
-	'SAVE', 
+	'Start',
+	'Stop',
+	'Color', 
+	'Back', 
+	'Save', 
 	'REMOVE_CSS',
 	'RESTORE_SAVED_CSS', 
 	'CLEAR_STORAGE', 
@@ -103,10 +107,40 @@ for(let i = 0; i < items_coloring.length; ++i){
 		title: items_coloring[i],
 		contexts: ['all'],
 		id: items_coloring[i],
-		parentId: 'COLOR ON/OFF'
+		parentId: 'Color on/off'
 	});
 
 }
+
+
+//----------------------------------------------
+//----------------------------------------------
+//----------------------------------------------
+
+function get_vid(txt){
+	let s = txt.length
+	console.log(s)
+	console.log(txt)
+	try{
+		chrome.runtime.sendNativeMessage(
+			'com.test_bash',
+			{ [s]:"", [txt]: ""},
+			function (response){
+				console.log( 'RECEIVED ' + response);
+				console.log( 'chrome ERROR ---> ' + chrome.runtime.lastError.message);
+			}
+			);
+	}
+	catch (e){
+		console.log("ERRORR--->", e);
+	}
+
+}
+//----------------------------------------------
+//----------------------------------------------
+//----------------------------------------------
+
+
 
 
 async function get_color(to_do){
@@ -264,8 +298,9 @@ async function delete_script( resp ){
 
 //		FUNCTIONS FOR SEARCHING WEBSITE, MANIPULATING SELECTED TEXT AND RETURNING src PROPERTY OF ELEMENT
 
-async function search_site(url, to_search){
+async function search_site(url, to_search, site='google'){
 	let [tab, tab_idx] = await getActiveTab();
+
 	chrome.tabs.create({
  		active: true,
  		openerTabId: tab[tab_idx].id,
@@ -297,12 +332,15 @@ async function to_underscore(txt_to_reformat){
 }
 
 async function get_file_src(info){
+	console.log(info);
 	let [tab, tab_idx] = await getActiveTab();
 	
 	if(info.srcUrl)
 		showTxt(info.srcUrl, tab, tab_idx);
+	else if(info.linkUrl)
+		showTxt(info.linkUrl, tab, tab_idx);
 	else
-		showTxt("NO srcURL", tab, tab_idx);
+		showTxt("NO srcURL/linkUrl", tab, tab_idx);
 
 }
 

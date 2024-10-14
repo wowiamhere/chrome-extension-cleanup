@@ -59,8 +59,11 @@ console.log('----EXTENSION_FUNCTIONS.JS---->', message );
 
 console.log('----SCRIPT INJECTED #############3');
 
+// STYLE SHEET FOR KILLING LINKS ON WEBPAGE
+let extension_stylesheet_links = new CSSStyleSheet();
+
 // STYLE SHEET FOR DELETE FUNCTIONALITY
-let extension_stylesheet_misc = new CSSStyleSheet();
+let extension_stylesheet_hide = new CSSStyleSheet();
 
 // STYLE SHEET FOR COLORING
 let extension_user_stylesheet = new CSSStyleSheet();
@@ -71,7 +74,8 @@ let extension_stylesheet = new CSSStyleSheet();
 document.adoptedStyleSheets = [ 
   extension_stylesheet, 
   extension_user_stylesheet, 
-  extension_stylesheet_misc ];
+  extension_stylesheet_links,
+  extension_stylesheet_hide ];
 
 
 /////
@@ -131,14 +135,19 @@ function remove_highlight(){
 //      FUNCTION FOR eventListener FROM start_deleting
 //      DELETES AN ELEMENT THAT IS BEING HOVERED ON BY USER.
 //      THE ELEMENT IS ALSO BEING HIGHLITED WITH style.border CSS ATTIBUTE
+
+
 function delete_el(){
   try{
     sel = get_selector( document.querySelectorAll(':hover') );
-    document. querySelector( sel ).remove();
+  
+    document.querySelector( sel ).remove();
+    
     sel = null;
   }
   catch{}
 }
+
 
 //      HELPER FUNCTION TO ACTIVATE AND DEACTIVATE THE  style.border ATTRIBUTE OF ALL CHILDREN OF AN ELEMENT
 //        HOVERED OVER BY USER.
@@ -156,12 +165,12 @@ function all_children(to_do){
 //        ALL LINKS ARE DEACTIVATED AND REACTIVATED AS NEEDED BY INSERTING A CSS RULE INTO A CUSTOM STYLE SHEET 
 function handle_links(to_do){
   if(to_do == 'kill'){
-    if(!extension_stylesheet_misc.cssRules[0])
-      extension_stylesheet_misc.insertRule('a{pointer-events:none !important;}');
+    if(!extension_stylesheet_links.cssRules[0])
+      extension_stylesheet_links.insertRule('a{pointer-events:none !important;}');
   }
   else{
-    if(extension_stylesheet_misc.cssRules.length > 0)
-      extension_stylesheet_misc.deleteRule(0);
+    if(extension_stylesheet_links.cssRules.length > 0)
+      extension_stylesheet_links.deleteRule(0);
   }
 }
 
@@ -298,7 +307,9 @@ async function restore_last(){
   document.adoptedStyleSheets = [ 
   extension_stylesheet, 
   extension_user_stylesheet, 
-  extension_stylesheet_misc ];
+  extension_stylesheet_links,
+  extension_stylesheet_hide ];
+
 console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse() * 10**-6) );
 }
 
