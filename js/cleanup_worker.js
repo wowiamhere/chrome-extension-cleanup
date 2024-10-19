@@ -118,13 +118,15 @@ for(let i = 0; i < items_coloring.length; ++i){
 //----------------------------------------------
 
 function get_vid(txt){
-	let s = txt.length
-	console.log(s)
-	console.log(txt)
+	
+	let s = txt.length;
+	s = s.toString().padStart(4,'0');
+	msg = { [s]:txt };
+
 	try{
 		chrome.runtime.sendNativeMessage(
 			'com.test_bash',
-			{ [s]:"", [txt]: ""},
+			msg,
 			function (response){
 				console.log( 'RECEIVED ' + response);
 				console.log( 'chrome ERROR ---> ' + chrome.runtime.lastError.message);
