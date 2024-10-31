@@ -36,12 +36,10 @@ console.log('----EXTENSION_FUNCTIONS.JS---->', message );
       persist_user_css();
       end_coloring();
     }
-    else if(message.msg == 'COLORING_REMOVE_CSS'){
+    else if(message.msg == 'COLORING_REMOVE_CSS')
       clear_css();
-    }
-    else if(message.msg == 'COLORING_RESTORE_SAVED_CSS'){
+    else if(message.msg == 'COLORING_RESTORE_SAVED_CSS')
       restore_last();
-    }
     else if(message.msg == 'COLORING_CLEAR_STORAGE'){
       await chrome.storage.local.clear();
     }
@@ -51,7 +49,18 @@ console.log('----EXTENSION_FUNCTIONS.JS---->', message );
       extension_user_stylesheet.replaceSync('');
       end_coloring();
     }
+    else if(message.msg == 'GET_FILE'){
+      sendResponse({here: 'here', to_do: message.to_do});
+      
+      switch(message.to_do){
+      case 'get_pdf':
+        get_pdf();
+        break;
+      }
+
+    }
     else{
+      console.log('MESSAGE NOT RECOGNIZED!!!!!!!!!!!!!!');
       return;
     }
 
@@ -71,19 +80,63 @@ let extension_user_stylesheet = new CSSStyleSheet();
 // STYLE SHEET FOR EXTENSION
 let extension_stylesheet = new CSSStyleSheet();
 
+let sel = null;
+
 document.adoptedStyleSheets = [ 
   extension_stylesheet, 
   extension_user_stylesheet, 
   extension_stylesheet_links,
   extension_stylesheet_hide ];
 
+//---------------------------------------------------------
+//----------------------------------------------------------
+//---THIS IS FOR GETTING PDF VERSION OF PORTION OF A WEBPAGE---
+//----------------------------------------------------------
+//----------------------------------------------------------
+function get_pdf(){
+  handle_links('kill');
+  document.body.addEventListener('mouseover', highlight_el, {once:false} );
+  document.body.addEventListener('mouseout', remove_highlight, {once:false} );
+  document.body.addEventListener('click', prep_file, {once:false} );  
+}
 
-/////
-///// THIS IS FOR DELETING ELEMENTS IN THE WEBPAGE
-///// RECEIVES MSG FROM WORKER AND STARTS DELETING FUNCTION
-/////
+ async function prep_file(){
+  let sel = get_selector( document.querySelectorAll(':hover') );
 
-let sel = null;
+  let dom_el = document.querySelector( sel );
+  dom_el.style = '';
+
+  let content_div = document.createElement('div');
+  content_div.appendChild( dom_el.cloneNode(true) );
+  let data = new Blob( [ content_div.outerHTML ], { type: 'text/html'});
+
+  try{
+    const file_handle = await window.showSaveFilePicker( { start_in: '/home/user1/Downloads/misc/temp/', suggestedName: 'file-conversion.html' } );
+    const writable = await file_handle.createWritable( { mode:'exclusive' } );
+    await writable.write( data );
+    await writable.close();
+  }
+  catch (err){
+    console.log('File error--> ', err);
+  }
+
+  chrome.runtime.sendMessage({to_do: 'pdf'});
+
+  document.body.removeEventListener('mouseover', highlight_el);
+  document.body.removeEventListener('mouseout', remove_highlight);
+  document.body.removeEventListener('click', prep_file);
+  remove_highlight();
+  handle_links('open');
+
+}
+
+//---------------------------------------------------------
+//----------------------------------------------------------
+//---THIS IS FOR DELETING ELEMENTS IN THE WEBPAGE------------
+//---RECEIVES MSG FROM WORKER AND STARTS DELETING FUNCTION---
+//----------------------------------------------------------
+//----------------------------------------------------------
+
 
 //      INSERTS BODY LISTENERS TO body ELEMENT TO HIGHLIGHT HOVERED ELEMENT UPON CLICKING ELEMENT IS DELETED
 //      DEACTIVATES ALL LINKS ON WEB PAGE
@@ -103,40 +156,10 @@ function stop_deleting(){
   handle_links('open');
 }
 
-//    FUNCTION FOR eventListener mouseover FROM start_deleting
-//    UPON USER HOVERING OVER AN ELEMENT, A SELECTOR IS RETREIVED AND STORED IN GLOBAL VARIABLE AND 
-//      THE ELEMENT AND ITS CHILDRENS CSS BORDER ATTRIBUTE IS ACTIVATED TO HIGHLIGHT ELEMENT TO USER 
-function highlight_el(){
-  try{
-    sel = get_selector( document.querySelectorAll(':hover') );
-
-    document.querySelector( sel ).style.border = "1px solid red";
-    document.querySelector( sel + ' :first-child').style.border = "1px solid green";
-
-    all_children('show');
-  }
-  catch{}
-}
-
-//      FUNCTION FOR eventListener mouseout FROM start_deleting
-//      QUERY UPON SELECTOR FROM GLOBAL SCOPE TO DEACTIVATE CSS FOR BORDER
-function remove_highlight(){
-  try{
-    document.querySelector( sel ).style.border = "";
-    document.querySelector( sel + ' :first-child').style.border = "";
-    all_children('hide');
-    sel = null;
-  }
-  catch{
-
-  }
-}
 
 //      FUNCTION FOR eventListener FROM start_deleting
 //      DELETES AN ELEMENT THAT IS BEING HOVERED ON BY USER.
 //      THE ELEMENT IS ALSO BEING HIGHLITED WITH style.border CSS ATTIBUTE
-
-
 function delete_el(){
   try{
     sel = get_selector( document.querySelectorAll(':hover') );
@@ -148,62 +171,12 @@ function delete_el(){
   catch{}
 }
 
-
-//      HELPER FUNCTION TO ACTIVATE AND DEACTIVATE THE  style.border ATTRIBUTE OF ALL CHILDREN OF AN ELEMENT
-//        HOVERED OVER BY USER.
-function all_children(to_do){
-  children = document.querySelector( sel ).children;
-  for(let i=1;i < children.length;i++){
-    if(to_do == 'show')
-      children[i].style.border="1px solid black";
-    else
-      children[i].style.border="";
-  }
-}
-
-//      TO BE ABLE TO CLICK ON ANY PORTION OF THE PAGE FOR DELETING AND COLORING,
-//        ALL LINKS ARE DEACTIVATED AND REACTIVATED AS NEEDED BY INSERTING A CSS RULE INTO A CUSTOM STYLE SHEET 
-function handle_links(to_do){
-  if(to_do == 'kill'){
-    if(!extension_stylesheet_links.cssRules[0])
-      extension_stylesheet_links.insertRule('a{pointer-events:none !important;}');
-  }
-  else{
-    if(extension_stylesheet_links.cssRules.length > 0)
-      extension_stylesheet_links.deleteRule(0);
-  }
-}
-
-//      RECEIVES A SELECTOR AND RETURNS A STRING TO BE STORED IN storage.local
-function get_selector(nodes){
-
-  let selector_array = [];
-  let idx;
-  let nodes_arr = [];
-
-  nodes_arr = Array.from(nodes);
-  nodes_arr.shift();
-
-  selector_array = Array.prototype.map.call( nodes_arr, (node) => {
-
-    idx = Array.prototype.indexOf.call( node.parentElement.children, node ) + 1;
-
-    if(node.id)
-      return node.tagName.toLowerCase() + '#' + node.id.substring(0, node.id.indexOf(' ') ? node.id.length : node.id.indexOf(' ') ) + ':nth-child(' + idx + ')';
-    if(node.className)
-      return node.tagName.toLowerCase() + '.' + node.classList[0] + ':nth-child(' + idx + ')';
-    else
-      return node.tagName.toLowerCase() != 'body' ? '> ' + node.tagName.toLowerCase() + ':nth-child(' + idx + ')' : node.tagName.toLowerCase() + ':nth-child(' + idx + ')' ;
-
-  });
-
-  return selector_array.join(' ');
-}
-
-
-///////////// 
-///////////// THIS IS FOR COLORING
-///////////// RECEIVES MESSGE FROM WORKER AND STARTS COLORING
+//-------------------------------------------------------------
+//-------------------------------------------------------------
+//------THIS IS FOR COLORING-----------------------------------
+//----- RECEIVES MESSGE FROM WORKER AND STARTS COLORING--------
+//-------------------------------------------------------------
+//-------------------------------------------------------------
 
 //        DEFAULT COLOR TO USE
 let bg_color = '#ababab';
@@ -256,17 +229,12 @@ function body_listener(ev){
     return undefined;
 }
 
-function check_sheet(slctr){
-  
-  let rules = extension_user_stylesheet.cssRules;
-  
-    for (let i=0; i < rules.length; ++i){
-      if ( slctr == rules[i].selectorText)
-        return i;
-    }
-  return undefined;
 
-}
+//-------------------------------------------------------------
+//-------------------------------------------------------------
+//--------- REST OF FUNCTIONALITY -----------------------------
+//-------------------------------------------------------------
+//-------------------------------------------------------------
 
 function delete_rule(idx){
   if(extension_user_stylesheet.cssRules.length > 0)
@@ -315,6 +283,105 @@ console.log('bytes ins use ---->: %s', (await chrome.storage.local.getBytesInUse
 
 function clear_css(){
   extension_user_stylesheet.replace("");
+}
+
+
+//-------------------------------------------------------------
+//-------------------------------------------------------------
+//--------HELPER FUNCITONS-------------------------------------
+//-------------------------------------------------------------
+//-------------------------------------------------------------
+
+//      RECEIVES A SELECTOR AND RETURNS A STRING TO BE STORED IN storage.local
+function get_selector(nodes){
+
+  let selector_array = [];
+  let idx;
+  let nodes_arr = [];
+
+  nodes_arr = Array.from(nodes);
+  nodes_arr.shift();
+
+  selector_array = Array.prototype.map.call( nodes_arr, (node) => {
+
+    idx = Array.prototype.indexOf.call( node.parentElement.children, node ) + 1;
+
+    if(node.id)
+      return node.tagName.toLowerCase() + '#' + node.id.substring(0, node.id.indexOf(' ') ? node.id.length : node.id.indexOf(' ') ) + ':nth-child(' + idx + ')';
+    if(node.className)
+      return node.tagName.toLowerCase() + '.' + node.classList[0] + ':nth-child(' + idx + ')';
+    else
+      return node.tagName.toLowerCase() != 'body' ? '> ' + node.tagName.toLowerCase() + ':nth-child(' + idx + ')' : node.tagName.toLowerCase() + ':nth-child(' + idx + ')' ;
+
+  });
+
+  return selector_array.join(' ');
+}
+
+//      TO BE ABLE TO CLICK ON ANY PORTION OF THE PAGE FOR DELETING AND COLORING,
+//        ALL LINKS ARE DEACTIVATED AND REACTIVATED AS NEEDED BY INSERTING A CSS RULE INTO A CUSTOM STYLE SHEET 
+function handle_links(to_do){
+  if(to_do == 'kill'){
+    if(!extension_stylesheet_links.cssRules[0])
+      extension_stylesheet_links.insertRule('a{pointer-events:none !important;}');
+  }
+  else{
+    if(extension_stylesheet_links.cssRules.length > 0)
+      extension_stylesheet_links.deleteRule(0);
+  }
+}
+
+//    FUNCTION FOR eventListener mouseover FROM start_deleting
+//    UPON USER HOVERING OVER AN ELEMENT, A SELECTOR IS RETREIVED AND STORED IN GLOBAL VARIABLE AND 
+//      THE ELEMENT AND ITS CHILDRENS CSS BORDER ATTRIBUTE IS ACTIVATED TO HIGHLIGHT ELEMENT TO USER 
+function highlight_el(){
+  try{
+    sel = get_selector( document.querySelectorAll(':hover') );
+
+    document.querySelector( sel ).style.border = "1px solid red";
+    //document.querySelector( sel + ' :first-child').style.border = "1px solid green";
+
+    //all_children('show');
+  }
+  catch{}
+}
+
+//      HELPER FUNCTION TO ACTIVATE AND DEACTIVATE THE  style.border ATTRIBUTE OF ALL CHILDREN OF AN ELEMENT
+//        HOVERED OVER BY USER.
+function all_children(to_do){
+  children = document.querySelector( sel ).children;
+  for(let i=1;i < children.length;i++){
+    if(to_do == 'show')
+      children[i].style.border="1px solid black";
+    else
+      children[i].style.border="";
+  }
+}
+
+//      FUNCTION FOR eventListener mouseout FROM start_deleting
+//      QUERY UPON SELECTOR FROM GLOBAL SCOPE TO DEACTIVATE CSS FOR BORDER
+function remove_highlight(){
+  try{
+    document.querySelector( sel ).style.border = "";
+    document.querySelector( sel + ' :first-child').style.border = "";
+    all_children('hide');
+    sel = null;
+  }
+  catch{
+
+  }
+}
+
+function check_sheet(slctr){
+  
+  let rules = extension_user_stylesheet.cssRules;
+  
+    for (let i=0; i < rules.length; ++i){
+      if ( slctr == rules[i].selectorText)
+        return i;
+    }
+  return undefined;
+
 }
 
 async function check_db(){

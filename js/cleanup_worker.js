@@ -2,6 +2,19 @@ const reg = /[\W_]/g;
 
 chrome.contextMenus.onClicked.addListener( handleSelection );
 
+chrome.runtime.onMessage.addListener( handleResponse );
+
+async function handleResponse(resp){
+	send_file_msg(resp.to_do)
+}
+
+function send_file_msg(to_do){
+	console.log("-------> ", to_do);
+	let s = to_do.length
+	let msg = {[s]:to_do};
+	console.log(msg);
+	chrome.runtime.sendNativeMessage( 'com.get_file_bash', msg );
+}
 
 ///        CALLBACK FUNCTION TO contextMenu.onClicked.addListener
 async function handleSelection(info){
@@ -29,6 +42,9 @@ async function handleSelection(info){
 		break;
 	case 'get_vid':
 		get_vid(info.selectionText);
+		break;
+	case 'get_pdf':
+		get_file(info)
 		break;
 	case 'Delete on/off':
 		if ( await get_stat() != 'COL' )
@@ -77,7 +93,8 @@ let items = [
 	'camelCase', 
 	'underscore', 
 	'src',
-	'get_vid'
+	'get_vid',
+	'get_file'
 	];
 
 // 						ARRAY FOR COLORING RIGHT CLICK MENU
@@ -93,7 +110,15 @@ let items_coloring = [
 	'DELETE_PAGE_COLORING'
 	];
 
-//                           CREATING RIGHT CLICK MENUS
+let items_file = [
+	'get_pdf',
+	'get_html'
+	];
+
+//------CREATING RIGHT CLICK MENUS--------------
+//----------------------------------------------
+//----------------------------------------------
+
 for(let i = 0; i < items.length; ++i){
 	chrome.contextMenus.create({
 		title: items[i],
@@ -112,38 +137,48 @@ for(let i = 0; i < items_coloring.length; ++i){
 
 }
 
+for(let i=0; i < items_file.length; ++i){
+	chrome.contextMenus.create({
+		title: items_file[i],
+		contexts: ['all'],
+		id: items_file[i],
+		parentId: 'get_file'
+	});
+}
 
 //----------------------------------------------
 //----------------------------------------------
 //----------------------------------------------
 
-function get_vid(txt){
-	
-	let s = txt.length;
-	s = s.toString().padStart(4,'0');
-	msg = { [s]:txt };
+async function get_file(info){
 
-	try{
-		chrome.runtime.sendNativeMessage(
-			'com.test_bash',
-			msg,
-			function (response){
-				console.log( 'RECEIVED ' + response);
-				console.log( 'chrome ERROR ---> ' + chrome.runtime.lastError.message);
-			}
-			);
+	to_do_var = info.menuItemId;
+	let [tab, tab_idx] = await getActiveTab();
+	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_FILE', to_do: info.menuItemId }, check_if_injected );
+}
+
+async function check_if_injected( resp ){
+console.log('REST!!!!!!!!!!!!!!!!!!--> ', resp);
+	if(resp == undefined && chrome.runtime.lastError ){
+		let [tab, tab_idx] = await getActiveTab();
+		
+		await chrome.scripting.executeScript({
+			files: ['js/extension_functions.js'],
+			injectImmediately: true,
+			target: {tabId: tab[tab_idx].id}
+		});
+		await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_FILE', to_do: to_do_var }, check_if_injected );
 	}
-	catch (e){
-		console.log("ERRORR--->", e);
+	else{
 	}
 
 }
-//----------------------------------------------
-//----------------------------------------------
-//----------------------------------------------
 
 
-
+//----------------------------------------------
+//-----------COLORING FUNCTIONALITY-------------
+//----------------------------------------------
+//----------------------------------------------
 
 async function get_color(to_do){
 	let [ tab, tab_idx, w_id ] = await getActiveTab();
@@ -253,6 +288,11 @@ async function coloring_func(to_do){
 	}
 }
 
+//----------------------------------------------
+//--------------DELETING FUNCTINALITY-----------
+//----------------------------------------------
+//----------------------------------------------
+
 
 //		WHEN RIGHT CLICKE MENU ITEM CLICKED CHECKS BADGE AND SENDS MESSAGE TO 
 //			CONTENT SCRIPT TO EXECUTE FUNCTIONALITY
@@ -296,6 +336,11 @@ async function delete_script( resp ){
 		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'START_DELETING' });
 	}
 }
+
+//----------------------------------------------
+//-------------THE REST-------------------------
+//----------------------------------------------
+//----------------------------------------------
 
 
 //		FUNCTIONS FOR SEARCHING WEBSITE, MANIPULATING SELECTED TEXT AND RETURNING src PROPERTY OF ELEMENT
@@ -346,7 +391,36 @@ async function get_file_src(info){
 
 }
 
+function get_vid(txt){
+	
+	let s = txt.length;
+	s = s.toString().padStart(4,'0');
+	msg = { [s]:txt };
+
+	try{
+		chrome.runtime.sendNativeMessage(
+			'com.test_bash',
+			msg,
+			function (response){
+				console.log( 'RECEIVED ' + response);
+				console.log( 'chrome ERROR ---> ' + chrome.runtime.lastError.message);
+			}
+			);
+	}
+	catch (e){
+		console.log("ERRORR--->", e);
+	}
+
+}
+
+// ************************************************
+// ************************************************
+// ************************************************
 // *******HELPER FUNCTIONS
+// ************************************************
+// ************************************************
+// ************************************************
+
 function txt_prep(txt){
 	return txt.split( reg ).filter( (el) => el.length > 1 )
 }
