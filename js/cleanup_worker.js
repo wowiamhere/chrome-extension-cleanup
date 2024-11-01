@@ -44,7 +44,10 @@ async function handleSelection(info){
 		get_vid(info.selectionText);
 		break;
 	case 'get_pdf':
-		get_file(info)
+		get_file(info);
+		break;
+	case 'get_docx':
+		get_file(info);
 		break;
 	case 'Delete on/off':
 		if ( await get_stat() != 'COL' )
@@ -112,7 +115,7 @@ let items_coloring = [
 
 let items_file = [
 	'get_pdf',
-	'get_html'
+	'get_docx'
 	];
 
 //------CREATING RIGHT CLICK MENUS--------------
@@ -154,7 +157,7 @@ async function get_file(info){
 
 	to_do_var = info.menuItemId;
 	let [tab, tab_idx] = await getActiveTab();
-	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_FILE', to_do: info.menuItemId }, check_if_injected );
+	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_FILE', to_do: to_do_var }, check_if_injected );
 }
 
 async function check_if_injected( resp ){

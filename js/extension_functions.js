@@ -51,14 +51,8 @@ console.log('----EXTENSION_FUNCTIONS.JS---->', message );
     }
     else if(message.msg == 'GET_FILE'){
       sendResponse({here: 'here', to_do: message.to_do});
-      
-      switch(message.to_do){
-      case 'get_pdf':
-        get_pdf();
-        break;
+      get_file(message.to_do);
       }
-
-    }
     else{
       console.log('MESSAGE NOT RECOGNIZED!!!!!!!!!!!!!!');
       return;
@@ -93,14 +87,9 @@ document.adoptedStyleSheets = [
 //---THIS IS FOR GETTING PDF VERSION OF PORTION OF A WEBPAGE---
 //----------------------------------------------------------
 //----------------------------------------------------------
-function get_pdf(){
-  handle_links('kill');
-  document.body.addEventListener('mouseover', highlight_el, {once:false} );
-  document.body.addEventListener('mouseout', remove_highlight, {once:false} );
-  document.body.addEventListener('click', prep_file, {once:false} );  
-}
+function get_file(to_do){
 
- async function prep_file(){
+ prep_file = async ()=>{
   let sel = get_selector( document.querySelectorAll(':hover') );
 
   let dom_el = document.querySelector( sel );
@@ -120,13 +109,21 @@ function get_pdf(){
     console.log('File error--> ', err);
   }
 
-  chrome.runtime.sendMessage({to_do: 'pdf'});
+  chrome.runtime.sendMessage( { to_do: to_do.substring(to_do.indexOf('_')+1)  });
 
   document.body.removeEventListener('mouseover', highlight_el);
   document.body.removeEventListener('mouseout', remove_highlight);
   document.body.removeEventListener('click', prep_file);
   remove_highlight();
   handle_links('open');
+
+  }
+
+  handle_links('kill');
+  document.body.addEventListener('mouseover', highlight_el, {once:false} );
+  document.body.addEventListener('mouseout', remove_highlight, {once:false} );
+  document.body.addEventListener('click', prep_file, {once:false} );  
+
 
 }
 
