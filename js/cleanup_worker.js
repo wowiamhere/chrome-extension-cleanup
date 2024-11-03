@@ -13,11 +13,11 @@ async function handleResponse(message, sender, sendResponse){
 		send_file_msg(message.to_do)
 }
 
-function send_file_msg(to_do){
+async function send_file_msg(to_do){
 	console.log("-------> ", to_do);
 	let msg = {to_do:to_do};
 	console.log(msg);
-	chrome.runtime.sendNativeMessage( 
+	await chrome.runtime.sendNativeMessage( 
 		'com.get_file_bash', 
 		msg , 
 		(response) => {console.log('!---!---> ', response);} );
