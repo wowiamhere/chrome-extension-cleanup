@@ -109,7 +109,7 @@ function get_file(to_do){
     console.log('File error--> ', err);
   }
 
-  chrome.runtime.sendMessage( { to_do: to_do.substring(to_do.indexOf('_')+1)  });
+  chrome.runtime.sendMessage( { to_do: to_do  });
 
   document.body.removeEventListener('mouseover', highlight_el);
   document.body.removeEventListener('mouseout', remove_highlight);

@@ -4,16 +4,23 @@ chrome.contextMenus.onClicked.addListener( handleSelection );
 
 chrome.runtime.onMessage.addListener( handleResponse );
 
-async function handleResponse(resp){
-	send_file_msg(resp.to_do)
+async function handleResponse(message, sender, sendResponse){
+
+	if(message.from_py_script){
+		console.log('runtimeOnmessage-->', message );	
+	}
+	else
+		send_file_msg(message.to_do)
 }
 
 function send_file_msg(to_do){
 	console.log("-------> ", to_do);
-	let s = to_do.length
-	let msg = {[s]:to_do};
+	let msg = {to_do:to_do};
 	console.log(msg);
-	chrome.runtime.sendNativeMessage( 'com.get_file_bash', msg );
+	chrome.runtime.sendNativeMessage( 
+		'com.get_file_bash', 
+		msg , 
+		(response) => {console.log('!---!---> ', response);} );
 }
 
 ///        CALLBACK FUNCTION TO contextMenu.onClicked.addListener
