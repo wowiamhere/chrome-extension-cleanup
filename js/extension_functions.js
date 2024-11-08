@@ -6,15 +6,17 @@
 //    SAVES CSS DATA IN storage.local AND RETREIVES DATA TO RE-APPLIED TO WEB PAGE
 
 
+console.log('----extension_functions.js INJECTED #############');
+
 chrome.runtime.onMessage.addListener( 
    async (message, sender, sendResponse) => {
 
-console.log('----EXTENSION_FUNCTIONS.JS---->', message );
+console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
     if(message.msg == 'INJECTED?')
       sendResponse( { msg: 'EXTENSION_FUNCTIONS_HERE'} );
     else if( message.msg == 'START_DELETING'){
-      console.log('----DELETING!!!---START!!!!!!!!');
       start_deleting();
+      console.log('----DELETING STARTED!!!!!!!!');
     }
     else if( message.msg == 'DELETE_OFF' ){
       stop_deleting();
@@ -50,17 +52,19 @@ console.log('----EXTENSION_FUNCTIONS.JS---->', message );
       end_coloring();
     }
     else if(message.msg == 'GET_FILE'){
-      sendResponse({here: 'here', to_do: message.to_do});
+      sendResponse({stat: 'here', to_do: message.to_do});
       get_file(message.to_do);
-      }
+    }
+    else if(message.msg == 'APP_RESULT'){
+      //alert( message.stat );
+      for_html_dialog_view( message.stat );
+    }
     else{
       console.log('MESSAGE NOT RECOGNIZED!!!!!!!!!!!!!!');
       return;
     }
 
 });
-
-console.log('----SCRIPT INJECTED #############3');
 
 // STYLE SHEET FOR KILLING LINKS ON WEBPAGE
 let extension_stylesheet_links = new CSSStyleSheet();
@@ -87,7 +91,7 @@ document.adoptedStyleSheets = [
 //---THIS IS FOR GETTING PDF VERSION OF PORTION OF A WEBPAGE---
 //----------------------------------------------------------
 //----------------------------------------------------------
-function get_file(to_do){
+async function get_file(to_do){
 
  prep_file = async ()=>{
   let sel = get_selector( document.querySelectorAll(':hover') );
@@ -124,6 +128,150 @@ function get_file(to_do){
   document.body.addEventListener('mouseout', remove_highlight, {once:false} );
   document.body.addEventListener('click', prep_file, {once:false} );  
 
+
+}
+
+//--------------------------------------------------------
+//--------------------------------------------------------
+//-- dialog ELEMENT FOR DISPLAYING RESULT (MESSAGE FROM HOST APP)
+//--------------------------------------------------------
+//--------------------------------------------------------
+
+function for_html_dialog_view(conversion_message){
+  //--------------------------------------------------------
+  //--- DIV FOR DISPLAYING dialog ELEMENT WITH RESPONSE FROM HOST APP (PYTHON)
+  //--------------------------------------------------------
+  let div_for_msg = document.createElement('div');
+  div_for_msg.id = "conversion-result-div";
+  div_for_msg.style = 'margin:2vh 2vw;'
+
+  let dialog_el = document.createElement('dialog');
+  dialog_el.id = 'dialog-for-response';
+  dialog_el.class = 'dialog-for-response';
+  dialog_el.style = 'margin:auto';
+
+  let span_for_code = document.createElement('span');
+  span_for_code.style = 'display:block;margin:2vh 2vw;'
+
+  let span_for_msg = document.createElement('span');
+  span_for_msg.style = 'display:block;margin:2vh 2vw;'
+  
+  div_for_msg.appendChild( span_for_code );
+  div_for_msg.appendChild( span_for_msg );
+  dialog_el.appendChild( div_for_msg );
+
+  //--------------------------------------------------------
+  //---- button TO DISREGARD THE dialog ELEMENT WITH HOST APP MESSAGE
+  //--------------------------------------------------------
+  let btn_to_hide = document.createElement('button');
+  btn_to_hide.id = 'close-dialog';
+  btn_to_hide.class = 'close-dialog';
+  btn_to_hide.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
+  btn_to_hide.innerText = 'Close';
+  btn_to_hide.type = 'button';
+  btn_to_hide.onclick = () => { 
+    dialog_el.close();
+    dialog_el.remove();
+     }
+
+  div_for_msg.appendChild( btn_to_hide );
+
+
+  //--------------------------------------------------------
+  //--------------------------------------------------------
+  //-- button TO VIEW RENAMED/MOVED FILE.
+  //--------------------------------------------------------
+  //--------------------------------------------------------
+  if(conversion_message.output.stat == 'Move/Rename'){
+
+    //---- SET THE MESSAGE FROM HOST APP ------
+    span_for_msg.innerText = conversion_message.stat;
+    span_for_code.innerText = conversion_message.output.stat;
+    
+    let btn_view_renamed_file = document.createElement('button');
+    btn_view_renamed_file.id = 'view-renamed-file-id';
+    btn_view_renamed_file.class = 'view-renamed-file-class';
+    btn_view_renamed_file.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
+    btn_view_renamed_file.innerText = 'Open Moved/Renamed File';
+    btn_view_renamed_file.type = 'button';
+    btn_view_renamed_file.onclick = () => {
+      let msg = {to_do: 'open_file', file_loc: conversion_message.output.file_loc };
+      chrome.runtime.sendMessage( msg );
+    }
+
+    div_for_msg.appendChild( btn_view_renamed_file );
+  }
+
+
+  try{
+    //--------------------------------------------------------
+    //-- CHECKING IF THE OPERATION WAS A CONVERSION,
+    //-- IF SO, DISPLAY INPUT AND RENAME/MOVE BUTTON
+    //--------------------------------------------------------
+    if(conversion_message.output.substring( conversion_message.output.indexOf(' ') + 1) == 'Conversion'){
+
+      //----------- SET THE MESSAGE FROM APP -------------
+      span_for_msg.innerText = conversion_message.output;
+      span_for_code.innerText = conversion_message.stat;
+
+      //--------------------------------------------------------
+      //-- button TO OPEN AND VIEW FILE IN NEW CHROME TAB
+      //--------------------------------------------------------
+
+      btn_view_file = document.createElement('button');
+      btn_view_file.id = 'view-file-btn';
+      btn_view_file.class = 'view-file-btn';
+      btn_view_file.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
+      btn_view_file.innerText = 'Open File';
+      btn_view_file.type = 'button';
+      btn_view_file.onclick = () => {
+        let temp = conversion_message.output.indexOf(' ');
+        let ext_n = conversion_message.output.substring( 0, temp ).toLowerCase();
+        let msg = {to_do:'open_file', file_type: ext_n };
+        chrome.runtime.sendMessage( msg );
+      }
+
+      div_for_msg.appendChild( btn_view_file );
+    
+      //--------------------------------------------------------
+      //--- input ELEMENT TO ENTER NEW FILE NAME FOR RENAMING.
+      //--------------------------------------------------------
+      let input_el = document.createElement('input');
+      input_el.id = 'input_name_id';
+      input_el.class = 'input_name_id';
+      input_el.style = 'display:inline-block;border:1px dotted red;';
+      input_el.type = 'text';
+      input_el.value = '';
+
+      div_for_msg.appendChild( input_el );
+
+      //--------------------------------------------------------
+      //-- button ATTACHED TO input. INCLUDES A CLICK EVENT
+      //-- GET THE NEW FILE NAME FROM USER AND SEND IT TO HOST APP FOR UPDATING FILE IN SYSTEM
+      //--------------------------------------------------------
+      let btn_rename_file = document.createElement('button');
+      btn_rename_file.id = 'rename-move-button';
+      btn_rename_file.class = 'rename-move-button';
+      btn_rename_file.style = 'display:inline-block;border:1px solid black;color:black;';
+      btn_rename_file.innerText = "Rename/Move";
+      btn_rename_file.type = 'button';
+      btn_rename_file.form = input_el.id;
+      btn_rename_file.onclick = () => { 
+        msg = { to_do: 'rename', new_file_name: input_el.value   };
+        chrome.runtime.sendMessage( msg );
+        dialog_el.close();
+        dialog_el.remove();
+      }
+
+      div_for_msg.appendChild( btn_rename_file );
+    }
+  }
+  catch (e){
+    console.log('This was NOT a conversion.');
+  }
+  
+  dialog_el_appended = document.body.appendChild( dialog_el );
+  dialog_el_appended.showModal();
 
 }
 
@@ -185,7 +333,6 @@ async function begin_coloring(){
   bg_color = 'rgb(171,171,171)';
   handle_links('kill');
   document.body.addEventListener("click", body_listener, {once:false} );
-
   document.body.addEventListener("mouseover", highlight_el, {once:false} );
   document.body.addEventListener("mouseout", remove_highlight, {once:false} );
 }
