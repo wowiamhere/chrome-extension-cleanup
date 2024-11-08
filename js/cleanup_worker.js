@@ -20,26 +20,12 @@ let handleHostResponse = async (message, sender, sendResponse) => {
 		
 		let  conversion_response = { 'msg': Object.keys(resp)[0], 'stat': resp[Object.keys(resp)[0]] };
 		let [tab ,tab_idx ,w_id] = await getActiveTab();
-console.log('----> conversion_response ---> ', conversion_response);
 		let send_message = async () => {
 			await chrome.tabs.sendMessage( tab[tab_idx].id, conversion_response );
 		}
 
 		let check_if_script_there = async (resp) => {
-
-	    	if( resp == undefined && chrome.runtime.lastError ){
-	    		console.log("----- extension_functions.js -- NOT injected ------");
-
-	    		await chrome.scripting.executeScript({
-	    			files: ['js/extension_functions.js'],
-	    			injectImmediately: true,
-	    			target: { tabId: tab[tab_idx].id }
-	    		});
-	    		send_message();
-	    	}
-	    	else
-	    		send_message();
-
+			check_send(resp, tab, tab_idx, send_message);
 		}
 
 	    try{
@@ -54,19 +40,8 @@ console.log('----> conversion_response ---> ', conversion_response);
 	port.onDisconnect.addListener( (info) => {
 		console.log('DISCONECTED --> ', info) 
 	});
-
-
 }
 chrome.runtime.onMessage.addListener( handleHostResponse );
-
-
-//------------------------------------------------------------------------
-//----------------GETS THE STATUS OF THE BADGE (COLORING OR DELETING MODE)
-//------------------------------------------------------------------------
-async function get_stat(){
-	let [tab, tab_idx] = await getActiveTab();
-	return await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
-}
 
 
 //-----------------------------------------------------------
@@ -141,6 +116,14 @@ async function handleSelection(info){
 	}
 }
 
+//------------------------------------------------------------------------
+//----------------GETS THE STATUS OF THE BADGE (COLORING OR DELETING MODE)
+//------------------------------------------------------------------------
+async function get_stat(){
+	let [tab, tab_idx] = await getActiveTab();
+	return await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
+}
+
 
 //                           ARRAY FOR RIGHT-CLICK MENU
 let items = [ 
@@ -178,8 +161,8 @@ let items_file = [
 	'markdown_strict'
 	];
 
-//------CREATING RIGHT CLICK MENUS--------------
 //----------------------------------------------
+//------CREATING RIGHT CLICK MENUS--------------
 //----------------------------------------------
 
 for(let i = 0; i < items.length; ++i){
@@ -199,7 +182,6 @@ for(let i = 0; i < items_coloring.length; ++i){
 		id: items_coloring[i],
 		parentId: 'Color on/off'
 	});
-
 }
 
 for(let i=0; i < items_file.length; ++i){
@@ -225,21 +207,7 @@ async function get_file(info){
 	}
 
 	let check_if_injected = async ( resp ) => {
-		if(resp == undefined && chrome.runtime.lastError ){
-			console.log("----- extension_functions.js -- NOT injected ------");
-			
-			await chrome.scripting.executeScript({
-				files: ['js/extension_functions.js'],
-				injectImmediately: true,
-				target: {tabId: tab[tab_idx].id}
-			});
-			send_messages();
-		}
-		else{
-			console.log('!!!!!!!!!!!!!!!!!!!trying again');
-			send_messages();
-		}
-
+		check_send(resp, tab, tab_idx, send_messages);
 	}
 
 	chrome.tabs.sendMessage( 
@@ -262,7 +230,6 @@ async function start_coloring(){
 	let stat = await chrome.action.getBadgeText( { tabId: tab[tab_idx].id } );
 
 //			CALLBACK TO MESSAGE FOR INSERTING THE MAIN CONTENT SCRIPT INTO TAB IN start_coloring()
-
 	set_badge_send_message = () => {
 		chrome.action.setBadgeText( { tabId: tab[tab_idx].id, text: "COL"} );
 		chrome.action.setBadgeBackgroundColor( { tabId: tab[tab_idx].id, color: 'yellow'} );
@@ -270,24 +237,7 @@ async function start_coloring(){
 	}
 
 	let coloring_are_you_there = async ( resp ) => {
-
-	//				IF NO RESPONSE AND ERROM SET FROM CALL TO SCRIPT; SCRIPT NEEDS TO BE INSERTED
-		if( resp == undefined  && chrome.runtime.lastError){
-			console.log("----- extension_functions.js -- NOT injected ------");
-
-			await chrome.scripting.executeScript({
-				files: ['js/extension_functions.js'],
-				injectImmediately: true,
-				target: { tabId: tab[tab_idx].id }
-			});
-			set_badge_send_message();
-		}
-		else{		
-			if(chrome.action.getBadgeText( { tabId: tab[tab_idx].id } ) != 'COL' ){
-			   	set_badge_send_message();
-			}
-		}
-
+		check_send(resp, tab, tab_idx, set_badge_send_message, script='js/extension_functions.js', coloring=true);
 	}
 
 	if( stat !='COL')
@@ -317,22 +267,10 @@ async function coloring_func(to_do){
 			send_message();
 		}
 	}else{
+		coloring_func_callback = async (resp) => { check_send(resp, tab, tab_idx, send_message); };
+
 		if( to_do == 'COLORING_REMOVE_CSS' || to_do == 'COLORING_RESTORE_SAVED_CSS' ){
-			await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, async (resp) => {
-				if( resp == undefined && chrome.runtime.lastError ){
-					console.log("----- extension_functions.js -- NOT injected ------");
-
-					await chrome.scripting.executeScript({
-						files: ['js/extension_functions.js'],
-						injectImmediately: true,
-						target: { tabId: tab[tab_idx].id }
-					});
-					send_message();
-				}else{
-					send_message();
-				}
-
-			} );
+			await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, coloring_func_callback );
 
 		}
 	}
@@ -348,19 +286,7 @@ async function get_color(to_do){
 	}
 	
 	let is_get_color_there = async (resp) => {
-		if( resp == undefined && chrome.runtime.lastError ){
-			console.log("----- get_color_script.js -- NOT injected ------");
-
-			await chrome.scripting.executeScript({
-				target: { tabId: tab[tab_idx].id },
-				injectImmediately: true,
-				files: ['js/get_color_script.js']
-			});
-
-			send_message();
-		}else{
-			send_message();
-		}
+		check_send(resp, tab, tab_idx, send_message, 'js/get_color_script.js');
 	}
 
 	if( stat == 'COL'){
@@ -392,20 +318,7 @@ async function delete_element(){
 	};
 
 	let delete_script = async ( resp ) => {
-		if(resp == undefined && chrome.runtime.lastError ){
-			console.log("----- extension_functions.js -- NOT injected ------");
-
-			await chrome.scripting.executeScript({
-				files: ['js/extension_functions.js'],
-				injectImmediately: true,
-				target: {tabId: tab[tab_idx].id}
-			});
-			set_badge_send_message();
-		}
-		else{
-			console.log('----> ', resp.msg );
-			set_badge_send_message();
-		}
+		check_send( resp, tab, tab_idx, set_badge_send_message );
 	}	
 
 	if(stat == "DEL"){
@@ -532,4 +445,26 @@ async function showTxt(txt_to_show, tab, tab_idx){
 	}	
 }
 
+async function check_send(resp, tab, tab_idx, send_fn, script='js/extension_functions.js', coloring=false){
+	if(resp == undefined && chrome.runtime.lastError ){
+		console.log("----- extension_functions.js -- NOT injected ------");
 
+		await chrome.scripting.executeScript({
+			files: [ script ],
+			injectImmediately: true,
+			target: {tabId: tab[tab_idx].id}
+		});
+		send_fn();
+	}
+	else{
+		if(coloring){
+			if(chrome.action.getBadgeText( { tabId: tab[tab_idx].id } ) != 'COL' ){
+				send_fn();
+			}
+		}
+		else{
+			console.log('!!!!!!!!!!!!!!!!!!!trying again');
+			send_fn();
+		}
+	}
+}
