@@ -151,9 +151,11 @@ function for_html_dialog_view(conversion_message){
   dialog_el.style = 'margin:auto';
 
   let span_for_code = document.createElement('span');
+  span_for_code.id = 'span-for-code';
   span_for_code.style = 'display:block;margin:2vh 2vw;'
 
   let span_for_msg = document.createElement('span');
+  span_for_msg.id = 'span-for-msg';
   span_for_msg.style = 'display:block;margin:2vh 2vw;'
   
   div_for_msg.appendChild( span_for_code );
@@ -182,12 +184,12 @@ function for_html_dialog_view(conversion_message){
   //-- button TO VIEW RENAMED/MOVED FILE.
   //--------------------------------------------------------
   //--------------------------------------------------------
-  if(conversion_message.output.stat == 'Move/Rename'){
+  if(conversion_message.output.done == 'Move/Rename'){
 
     //---- SET THE MESSAGE FROM HOST APP ------
-    span_for_msg.innerText = conversion_message.stat;
-    span_for_code.innerText = conversion_message.output.stat;
-    
+    span_for_code.innerText = conversion_message.stat;
+    span_for_msg.innerText = conversion_message.output.done;
+console.log('***************--> ', conversion_message);    
     let btn_view_renamed_file = document.createElement('button');
     btn_view_renamed_file.id = 'view-renamed-file-id';
     btn_view_renamed_file.class = 'view-renamed-file-class';
@@ -200,6 +202,10 @@ function for_html_dialog_view(conversion_message){
     }
 
     div_for_msg.appendChild( btn_view_renamed_file );
+  }
+  else{
+    span_for_msg.innerText = conversion_message.output;
+    span_for_code.innerText = conversion_message.stat;    
   }
 
 
