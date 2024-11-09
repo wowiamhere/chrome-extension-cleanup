@@ -93,7 +93,15 @@ document.adoptedStyleSheets = [
 //----------------------------------------------------------
 async function get_file(to_do){
 
- prep_file = async ()=>{
+  function get_file_open_page(){
+    document.body.removeEventListener('mouseover', highlight_el);
+    document.body.removeEventListener('mouseout', remove_highlight);
+    document.body.removeEventListener('click', prep_file);
+    remove_highlight();
+    handle_links('open');
+  }
+
+  prep_file = async ()=>{
   let sel = get_selector( document.querySelectorAll(':hover') );
 
   let dom_el = document.querySelector( sel );
@@ -104,22 +112,20 @@ async function get_file(to_do){
   let data = new Blob( [ content_div.outerHTML ], { type: 'text/html'});
 
   try{
-    const file_handle = await window.showSaveFilePicker( { start_in: '/home/user1/Downloads/misc/temp/', suggestedName: 'file-conversion.html' } );
+    const file_handle = await window.showSaveFilePicker( { suggestedName: 'file-conversion.html' } );
     const writable = await file_handle.createWritable( { mode:'exclusive' } );
     await writable.write( data );
     await writable.close();
+  
+    chrome.runtime.sendMessage( { to_do: to_do  });
+
+    get_file_open_page();
   }
   catch (err){
     console.log('File error--> ', err);
+    get_file_open_page();
   }
 
-  chrome.runtime.sendMessage( { to_do: to_do  });
-
-  document.body.removeEventListener('mouseover', highlight_el);
-  document.body.removeEventListener('mouseout', remove_highlight);
-  document.body.removeEventListener('click', prep_file);
-  remove_highlight();
-  handle_links('open');
 
   }
 
