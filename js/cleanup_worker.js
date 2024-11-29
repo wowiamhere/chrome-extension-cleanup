@@ -12,7 +12,7 @@ let handleHostResponse = async (message, sender, sendResponse) => {
 
 	let msg = message;
 
-	let port = chrome .runtime.connectNative('com.get_file_bash');
+	let port = chrome.runtime.connectNative('com.get_script');
 	port.postMessage( msg );
 
 	port.onMessage.addListener( async function(resp){
@@ -127,17 +127,17 @@ async function get_stat(){
 
 //                           ARRAY FOR RIGHT-CLICK MENU
 let items = [ 
-	'get_file',
 	'youtube', 
 	'amazon', 
 	'imdbPro', 
-	'src',
+	'get_file',
 	'get_vid',
 	'Color on/off',
 	'Delete on/off', 
+	'src',
 	'fileName', 
 	'camelCase', 
-	'underscore', 
+	'underscore' 
 	];
 
 // 						ARRAY FOR COLORING RIGHT CLICK MENU
@@ -194,9 +194,11 @@ for(let i=0; i < items_file.length; ++i){
 	});
 }
 
-//----------------------------------------------
-//----------------------------------------------
-//----------------------------------------------
+//--------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
+//-- FOR GETTING A PDF, DOCX, MARKDOWN, PLAINTEXT OR ODT FILE FROM HTML SELECTION
+//--------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 
 async function get_file(info){
 	to_do_var = info.menuItemId;
@@ -214,6 +216,15 @@ async function get_file(info){
 		tab[tab_idx].id, 
 		{ msg: 'INJECTED?' }, 
 		check_if_injected );
+}
+
+//----------------------------------------------
+//----------------------------------------------
+//-- FOR DOWNLOADING A VIDEO
+//----------------------------------------------
+//----------------------------------------------
+function get_vid(txt){
+	handleHostResponse( { to_do:'vid', url: txt } );
 }
 
 
@@ -381,28 +392,6 @@ async function get_file_src(info){
 		showTxt(info.linkUrl, tab, tab_idx);
 	else
 		showTxt("NO srcURL/linkUrl", tab, tab_idx);
-
-}
-
-function get_vid(txt){
-	
-	let s = txt.length;
-	s = s.toString().padStart(4,'0');
-	msg = { [s]:txt };
-
-	try{
-		chrome.runtime.sendNativeMessage(
-			'com.test_bash',
-			msg,
-			function (response){
-				console.log( 'RECEIVED ' + response);
-				console.log( 'chrome ERROR ---> ' + chrome.runtime.lastError.message);
-			}
-			);
-	}
-	catch (e){
-		console.log("ERRORR--->", e);
-	}
 
 }
 
