@@ -186,7 +186,7 @@ function html_for_app_result(conversion_message){
   //--------------------------------------------------------
   //-- button TO OPEN AND VIEW FILE IN NEW CHROME TAB
   //--------------------------------------------------------
-  btn_view_file = document.createElement('button');
+  let btn_view_file = document.createElement('button');
   btn_view_file.id = 'view-file-btn';
   btn_view_file.class = 'view-file-btn';
   btn_view_file.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
@@ -198,7 +198,7 @@ function html_for_app_result(conversion_message){
   //-------------------------------------------------------------
   //-- modal appended to div and activated
   //-------------------------------------------------------------
-  dialog_el_appended = document.body.appendChild( dialog_el );
+  let dialog_el_appended = document.body.appendChild( dialog_el );
   dialog_el_appended.showModal();     
 
   //-------------------------------------------------------------
@@ -269,6 +269,8 @@ function html_for_app_result(conversion_message){
   }
   else if( conversion_message.output.done == 'VIDEO DOWNLOADED' || 
     conversion_message.output.done == 'VIDEO TO MP3' ){
+
+    btn_view_file.remove()
 
     span_for_msg.innerText = conversion_message.output.done;
     span_for_code.innerText = conversion_message.stat;
