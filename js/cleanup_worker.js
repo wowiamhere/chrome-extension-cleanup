@@ -71,9 +71,8 @@ async function handleSelection(info){
 	case 'src':
 		get_file_src(info);
 		break;
-	case 'get_vid':
-		get_vid(info.selectionText);
-		break;
+	case 'vid':
+	case 'mp3':
 	case 'pdf':
 	case 'docx':
 	case 'odt':
@@ -131,7 +130,6 @@ let items = [
 	'amazon', 
 	'imdbPro', 
 	'get_file',
-	'get_vid',
 	'Color on/off',
 	'Delete on/off', 
 	'src',
@@ -154,6 +152,8 @@ let items_coloring = [
 	];
 
 let items_file = [
+	'vid',
+	'mp3',
 	'pdf',
 	'docx',
 	'odt',
@@ -204,29 +204,24 @@ async function get_file(info){
 	to_do_var = info.menuItemId;
 	let [tab, tab_idx, w_id] = await getActiveTab();
 
-	let send_messages = () => {
-		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_FILE', to_do: to_do_var } );
+	if( to_do_var == 'vid' || to_do_var == 'mp3' )
+		handleHostResponse( {to_do: to_do_var, url: info.selectionText })
+	else{
+
+		let send_messages = () => {
+			chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_FILE', to_do: to_do_var } );
+		}
+
+		let check_if_injected = async ( resp ) => {
+			check_send(resp, tab, tab_idx, send_messages);
+		}
+
+		chrome.tabs.sendMessage( 
+			tab[tab_idx].id, 
+			{ msg: 'INJECTED?' }, 
+			check_if_injected );
 	}
-
-	let check_if_injected = async ( resp ) => {
-		check_send(resp, tab, tab_idx, send_messages);
-	}
-
-	chrome.tabs.sendMessage( 
-		tab[tab_idx].id, 
-		{ msg: 'INJECTED?' }, 
-		check_if_injected );
 }
-
-//----------------------------------------------
-//----------------------------------------------
-//-- FOR DOWNLOADING A VIDEO
-//----------------------------------------------
-//----------------------------------------------
-function get_vid(txt){
-	handleHostResponse( { to_do:'vid', url: txt } );
-}
-
 
 
 //----------------------------------------------

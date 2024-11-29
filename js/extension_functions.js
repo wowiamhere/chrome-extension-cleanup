@@ -56,8 +56,7 @@ console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
       get_file(message.to_do);
     }
     else if(message.msg == 'APP_RESULT'){
-      //alert( message.stat );
-      for_html_dialog_view( message.stat );
+      html_for_app_result( message.stat );
     }
     else{
       console.log('MESSAGE NOT RECOGNIZED!!!!!!!!!!!!!!');
@@ -143,7 +142,7 @@ async function get_file(to_do){
 //--------------------------------------------------------
 //--------------------------------------------------------
 
-function for_html_dialog_view(conversion_message){
+function html_for_app_result(conversion_message){
   //--------------------------------------------------------
   //--- DIV FOR DISPLAYING dialog ELEMENT WITH RESPONSE FROM HOST APP (PYTHON)
   //--------------------------------------------------------
@@ -184,106 +183,97 @@ function for_html_dialog_view(conversion_message){
 
   div_for_msg.appendChild( btn_to_hide );
 
+  //--------------------------------------------------------
+  //-- button TO OPEN AND VIEW FILE IN NEW CHROME TAB
+  //--------------------------------------------------------
+  btn_view_file = document.createElement('button');
+  btn_view_file.id = 'view-file-btn';
+  btn_view_file.class = 'view-file-btn';
+  btn_view_file.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
+  btn_view_file.innerText = 'Open File';
+  btn_view_file.type = 'button';
 
-  //--------------------------------------------------------
-  //--------------------------------------------------------
-  //-- button TO VIEW RENAMED/MOVED FILE.
-  //--------------------------------------------------------
-  //--------------------------------------------------------
-  if(conversion_message.output.done == 'Move/Rename'){
+  div_for_msg.appendChild( btn_view_file ); 
+
+  //-------------------------------------------------------------
+  //-- modal appended to div and activated
+  //-------------------------------------------------------------
+  dialog_el_appended = document.body.appendChild( dialog_el );
+  dialog_el_appended.showModal();     
+
+  //-------------------------------------------------------------
+  //--  CHECK THE RESPONSE FROM APP FOR TYPE OF ACTION PERFORMED 
+  //--  AND ANY OUTPUT FROM OPERATION
+  //-------------------------------------------------------------    
+  if(conversion_message.output.done == 'Conversion'){
+
+    //----------- SET THE MESSAGE FROM APP -------------
+    span_for_msg.innerText = conversion_message.output.type;
+    span_for_code.innerText = conversion_message.stat;
+
+    btn_view_file.onclick = () => {
+      let ext_n = conversion_message.output.type
+      let msg = {to_do:'open_file', file_type: ext_n };
+      chrome.runtime.sendMessage( msg );
+    }
+
+    //--------------------------------------------------------
+    //--- input ELEMENT TO ENTER NEW FILE NAME FOR RENAMING.
+    //--------------------------------------------------------
+    let input_el = document.createElement('input');
+    input_el.id = 'input_name_id';
+    input_el.class = 'input_name_id';
+    input_el.style = 'display:inline-block;border:1px dotted red;';
+    input_el.type = 'text';
+    input_el.value = '';
+
+    div_for_msg.appendChild( input_el );
+
+    //--------------------------------------------------------
+    //-- button ATTACHED TO input. INCLUDES A CLICK EVENT
+    //-- GET THE NEW FILE NAME FROM USER AND SEND IT TO HOST APP FOR UPDATING FILE IN SYSTEM
+    //--------------------------------------------------------
+    let btn_rename_file = document.createElement('button');
+    btn_rename_file.id = 'rename-move-button';
+    btn_rename_file.class = 'rename-move-button';
+    btn_rename_file.style = 'display:inline-block;border:1px solid black;color:black;';
+    btn_rename_file.innerText = "Rename/Move";
+    btn_rename_file.type = 'button';
+    btn_rename_file.form = input_el.id;
+    btn_rename_file.onclick = () => { 
+      msg = { to_do: 'rename', new_file_name: input_el.value   };
+      chrome.runtime.sendMessage( msg );
+      dialog_el.close();
+      dialog_el.remove();
+    }
+
+    div_for_msg.appendChild( btn_rename_file );
+  }
+  else if(conversion_message.output.done == 'Move/Rename'){
+
+    //--------------------------------------------------------
+    //--------------------------------------------------------
+    //-- button TO VIEW RENAMED/MOVED FILE.
+    //--------------------------------------------------------
+    //--------------------------------------------------------
 
     //---- SET THE MESSAGE FROM HOST APP ------
     span_for_code.innerText = conversion_message.stat;
     span_for_msg.innerText = conversion_message.output.done;
-console.log('***************--> ', conversion_message);    
-    let btn_view_renamed_file = document.createElement('button');
-    btn_view_renamed_file.id = 'view-renamed-file-id';
-    btn_view_renamed_file.class = 'view-renamed-file-class';
-    btn_view_renamed_file.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
-    btn_view_renamed_file.innerText = 'Open Moved/Renamed File';
-    btn_view_renamed_file.type = 'button';
-    btn_view_renamed_file.onclick = () => {
+
+    btn_view_file.onclick = () => {
       let msg = {to_do: 'open_file', file_loc: conversion_message.output.file_loc };
       chrome.runtime.sendMessage( msg );
     }
 
-    div_for_msg.appendChild( btn_view_renamed_file );
   }
-  else{
-    span_for_msg.innerText = conversion_message.output;
-    span_for_code.innerText = conversion_message.stat;    
-  }
+  else if( conversion_message.output.done == 'VIDEO DOWNLOADED' || 
+    conversion_message.output.done == 'VIDEO TO MP3' ){
 
+    span_for_msg.innerText = conversion_message.output.done;
+    span_for_code.innerText = conversion_message.stat;
 
-  try{
-    //--------------------------------------------------------
-    //-- CHECKING IF THE OPERATION WAS A CONVERSION,
-    //-- IF SO, DISPLAY INPUT AND RENAME/MOVE BUTTON
-    //--------------------------------------------------------
-    if(conversion_message.output.substring( conversion_message.output.indexOf(' ') + 1) == 'Conversion'){
-
-      //----------- SET THE MESSAGE FROM APP -------------
-      span_for_msg.innerText = conversion_message.output;
-      span_for_code.innerText = conversion_message.stat;
-
-      //--------------------------------------------------------
-      //-- button TO OPEN AND VIEW FILE IN NEW CHROME TAB
-      //--------------------------------------------------------
-
-      btn_view_file = document.createElement('button');
-      btn_view_file.id = 'view-file-btn';
-      btn_view_file.class = 'view-file-btn';
-      btn_view_file.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
-      btn_view_file.innerText = 'Open File';
-      btn_view_file.type = 'button';
-      btn_view_file.onclick = () => {
-        let temp = conversion_message.output.indexOf(' ');
-        let ext_n = conversion_message.output.substring( 0, temp ).toLowerCase();
-        let msg = {to_do:'open_file', file_type: ext_n };
-        chrome.runtime.sendMessage( msg );
-      }
-
-      div_for_msg.appendChild( btn_view_file );
-    
-      //--------------------------------------------------------
-      //--- input ELEMENT TO ENTER NEW FILE NAME FOR RENAMING.
-      //--------------------------------------------------------
-      let input_el = document.createElement('input');
-      input_el.id = 'input_name_id';
-      input_el.class = 'input_name_id';
-      input_el.style = 'display:inline-block;border:1px dotted red;';
-      input_el.type = 'text';
-      input_el.value = '';
-
-      div_for_msg.appendChild( input_el );
-
-      //--------------------------------------------------------
-      //-- button ATTACHED TO input. INCLUDES A CLICK EVENT
-      //-- GET THE NEW FILE NAME FROM USER AND SEND IT TO HOST APP FOR UPDATING FILE IN SYSTEM
-      //--------------------------------------------------------
-      let btn_rename_file = document.createElement('button');
-      btn_rename_file.id = 'rename-move-button';
-      btn_rename_file.class = 'rename-move-button';
-      btn_rename_file.style = 'display:inline-block;border:1px solid black;color:black;';
-      btn_rename_file.innerText = "Rename/Move";
-      btn_rename_file.type = 'button';
-      btn_rename_file.form = input_el.id;
-      btn_rename_file.onclick = () => { 
-        msg = { to_do: 'rename', new_file_name: input_el.value   };
-        chrome.runtime.sendMessage( msg );
-        dialog_el.close();
-        dialog_el.remove();
-      }
-
-      div_for_msg.appendChild( btn_rename_file );
-    }
-  }
-  catch (e){
-    console.log('This was NOT a conversion.');
-  }
-  
-  dialog_el_appended = document.body.appendChild( dialog_el );
-  dialog_el_appended.showModal();
+  } 
 
 }
 
