@@ -78,6 +78,7 @@ async function handleSelection(info){
 	case 'odt':
 	case 'plain':
 	case 'markdown_strict':
+	case 'set_tags':
 		get_file(info);
 		break;
 	case 'Delete on/off':
@@ -128,7 +129,7 @@ async function get_stat(){
 let items = [ 
 	'youtube', 
 	'amazon', 
-	'imdbPro', 
+	'imdbPro',
 	'get_file',
 	'Color on/off',
 	'Delete on/off', 
@@ -154,6 +155,7 @@ let items_coloring = [
 let items_file = [
 	'vid',
 	'mp3',
+	'set_tags',
 	'pdf',
 	'docx',
 	'odt',
@@ -222,7 +224,6 @@ async function get_file(info){
 			check_if_injected );
 	}
 }
-
 
 //----------------------------------------------
 //-----------COLORING FUNCTIONALITY-------------

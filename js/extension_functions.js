@@ -53,7 +53,11 @@ console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
     }
     else if(message.msg == 'GET_FILE'){
       sendResponse({stat: 'here', to_do: message.to_do});
-      get_file(message.to_do);
+
+      if(message.to_do == 'set_tags')
+        set_tags();
+      else
+        get_file(message.to_do);
     }
     else if(message.msg == 'APP_RESULT'){
       html_for_app_result( message.stat );
@@ -84,6 +88,98 @@ document.adoptedStyleSheets = [
   extension_user_stylesheet, 
   extension_stylesheet_links,
   extension_stylesheet_hide ];
+
+
+//----------------------------------------------
+//-----------SET META TAGS FOR AN MP3 FILE------
+//----------------------------------------------
+//----------------------------------------------
+async function set_tags(){
+console.log('############################################');
+  let dialog_el = document.createElement('dialog');
+  dialog_el.id = 'dialog-for-tags';
+  dialog_el.class = 'dialog-for-tags';
+  dialog_el.style = 'margin:auto';
+
+//-------------------------------------------------------
+//-------------------------------------------------------
+//-- INPUT ELEMENTS FOR TITLE, ARTIST AND GENRE METAGS---
+//-- FILE NAME AND PATH TO FILE--------------------------
+//-------------------------------------------------------
+//-------------------------------------------------------
+  let input_path = document.createElement('input');
+  input_path.id = 'input_path_id';
+  input_path.class = 'input_path_id';
+  input_path.style = 'display:inline-block;border:1px dotted red;';
+  input_path.type = 'text';
+  input_path.name = 'path';
+  input_path.placeholder = 'path'
+
+  let input_title = document.createElement('input');
+  input_title.id = 'title_id';
+  input_title.class = 'title_id';
+  input_title.style = 'display:inline-block;border:1px dotted red;';
+  input_title.type = 'text';
+  input_title.name = 'title';
+  input_title.placeholder = 'title'
+
+  let input_artist = document.createElement('input');
+  input_artist.id = 'artist_id';
+  input_artist.class = 'artist_id';
+  input_artist.style = 'display:inline-block;border:1px dotted red;';
+  input_artist.type = 'text';
+  input_artist.name = 'artist';
+  input_artist.placeholder = 'artist';
+
+  let input_genre = document.createElement('input');
+  input_genre.id = 'genre_id';
+  input_genre.class = 'genre_id';
+  input_genre.style = 'display:inline-block;border:1px dotted red;';
+  input_genre.type = 'text';
+  input_genre.name = 'genre';
+  input_genre.placeholder = 'genre';
+
+  const f_handle = await window.showOpenFilePicker( );
+
+
+  //--------------------------------------------------------
+  //-- button ATTACHED TO input. INCLUDES A CLICK EVENT
+  //-- GET THE NEW FILE NAME FROM USER AND SEND IT TO HOST APP FOR UPDATING FILE IN SYSTEM
+  //--------------------------------------------------------
+  let btn_set_tags = document.createElement('button');
+  btn_set_tags.id = 'set-tags-button';
+  btn_set_tags.class = 'set-tags-button';
+  btn_set_tags.style = 'display:inline-block;border:1px solid black;color:black;';
+  btn_set_tags.innerText = "Set Tags";
+  btn_set_tags.type = 'button';
+
+  btn_set_tags.onclick = () => { 
+    msg = { 
+        to_do: 'set_tags',
+        path: input_path.value,
+        f_name: f_handle[0]['name'],
+        title: input_title.value, 
+        artist: input_artist.value, 
+        genre: input_genre.value 
+    };
+    chrome.runtime.sendMessage( msg );
+    dialog_el.close();
+    dialog_el.remove();
+  }
+
+  dialog_el.appendChild( input_path );
+  dialog_el.appendChild( input_title );
+  dialog_el.appendChild( input_artist );
+  dialog_el.appendChild( input_genre );
+  dialog_el.appendChild( btn_set_tags );
+
+  //-------------------------------------------------------------
+  //-- modal APPENDED TO div AND ACTIVATED
+  //-------------------------------------------------------------
+  let dialog_el_appended = document.body.appendChild( dialog_el );
+  dialog_el_appended.showModal();
+
+}
 
 //---------------------------------------------------------
 //----------------------------------------------------------
@@ -150,11 +246,6 @@ function html_for_app_result(conversion_message){
   div_for_msg.id = "conversion-result-div";
   div_for_msg.style = 'margin:2vh 2vw;'
 
-  let dialog_el = document.createElement('dialog');
-  dialog_el.id = 'dialog-for-response';
-  dialog_el.class = 'dialog-for-response';
-  dialog_el.style = 'margin:auto';
-
   let span_for_code = document.createElement('span');
   span_for_code.id = 'span-for-code';
   span_for_code.style = 'display:block;margin:2vh 2vw;'
@@ -165,6 +256,12 @@ function html_for_app_result(conversion_message){
   
   div_for_msg.appendChild( span_for_code );
   div_for_msg.appendChild( span_for_msg );
+
+  let dialog_el = document.createElement('dialog');
+  dialog_el.id = 'dialog-for-response';
+  dialog_el.class = 'dialog-for-response';
+  dialog_el.style = 'margin:auto';
+
   dialog_el.appendChild( div_for_msg );
 
   //--------------------------------------------------------
@@ -199,7 +296,7 @@ function html_for_app_result(conversion_message){
   //-- modal appended to div and activated
   //-------------------------------------------------------------
   let dialog_el_appended = document.body.appendChild( dialog_el );
-  dialog_el_appended.showModal();     
+  dialog_el_appended.showModal();
 
   //-------------------------------------------------------------
   //--  CHECK THE RESPONSE FROM APP FOR TYPE OF ACTION PERFORMED 
@@ -267,14 +364,17 @@ function html_for_app_result(conversion_message){
     }
 
   }
-  else if( conversion_message.output.done == 'VIDEO DOWNLOADED' || 
-    conversion_message.output.done == 'VIDEO TO MP3' ){
+  else if( conversion_message.output.done == 'VIDEO DOWNLOADED'){
+    btn_view_file.remove()
 
+    span_for_msg.innerText = conversion_message.output.done;
+    span_for_code.innerText = conversion_message.stat;    
+  }
+  else if(conversion_message.output.done == 'VIDEO TO MP3' ){
     btn_view_file.remove()
 
     span_for_msg.innerText = conversion_message.output.done;
     span_for_code.innerText = conversion_message.stat;
-
   } 
 
 }
