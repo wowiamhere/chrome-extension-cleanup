@@ -95,18 +95,17 @@ document.adoptedStyleSheets = [
 //----------------------------------------------
 //----------------------------------------------
 async function set_tags(){
-console.log('############################################');
   let dialog_el = document.createElement('dialog');
   dialog_el.id = 'dialog-for-tags';
   dialog_el.class = 'dialog-for-tags';
   dialog_el.style = 'margin:auto';
 
-//-------------------------------------------------------
-//-------------------------------------------------------
-//-- INPUT ELEMENTS FOR TITLE, ARTIST AND GENRE METAGS---
-//-- FILE NAME AND PATH TO FILE--------------------------
-//-------------------------------------------------------
-//-------------------------------------------------------
+  //-------------------------------------------------------
+  //-------------------------------------------------------
+  //-- INPUT ELEMENTS FOR TITLE, ARTIST AND GENRE METAGS---
+  //-- FILE NAME AND PATH TO FILE--------------------------
+  //-------------------------------------------------------
+  //-------------------------------------------------------
   let input_path = document.createElement('input');
   input_path.id = 'input_path_id';
   input_path.class = 'input_path_id';
@@ -142,10 +141,11 @@ console.log('############################################');
   const f_handle = await window.showOpenFilePicker( );
 
 
-  //--------------------------------------------------------
+  //----------------------------------------------------------------
   //-- button ATTACHED TO input. INCLUDES A CLICK EVENT
-  //-- GET THE NEW FILE NAME FROM USER AND SEND IT TO HOST APP FOR UPDATING FILE IN SYSTEM
-  //--------------------------------------------------------
+  //-- SENDS MESSAGE TO NATIVE APP FOR UPDATING MP3 FILE TAGS
+  //-- SENDS FILE NAME, PATH TO FILE, TITLE, ARTIST, GENRE TO UPDATE
+  //----------------------------------------------------------------
   let btn_set_tags = document.createElement('button');
   btn_set_tags.id = 'set-tags-button';
   btn_set_tags.class = 'set-tags-button';
@@ -153,7 +153,7 @@ console.log('############################################');
   btn_set_tags.innerText = "Set Tags";
   btn_set_tags.type = 'button';
 
-  btn_set_tags.onclick = () => { 
+  btn_set_tags.onclick = () => {
     msg = { 
         to_do: 'set_tags',
         path: input_path.value,
@@ -162,6 +162,7 @@ console.log('############################################');
         artist: input_artist.value, 
         genre: input_genre.value 
     };
+
     chrome.runtime.sendMessage( msg );
     dialog_el.close();
     dialog_el.remove();
@@ -174,7 +175,7 @@ console.log('############################################');
   dialog_el.appendChild( btn_set_tags );
 
   //-------------------------------------------------------------
-  //-- modal APPENDED TO div AND ACTIVATED
+  //-- modal APPENDED TO PAGE body AND ACTIVATED
   //-------------------------------------------------------------
   let dialog_el_appended = document.body.appendChild( dialog_el );
   dialog_el_appended.showModal();
@@ -183,7 +184,7 @@ console.log('############################################');
 
 //---------------------------------------------------------
 //----------------------------------------------------------
-//---THIS IS FOR GETTING PDF VERSION OF PORTION OF A WEBPAGE---
+//---GET DIFFERENT FILE VERSION OF HTML PORTION OF A WEBPAGE
 //----------------------------------------------------------
 //----------------------------------------------------------
 async function get_file(to_do){
