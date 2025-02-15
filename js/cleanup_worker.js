@@ -59,6 +59,9 @@ async function handleSelection(info){
 	case 'imdbPro':
 		search_site('https://pro.imdb.com/api/instantSearch?retina=false&q=', info.selectionText);
 		break;
+	case 'dicReal':
+		search_site('https://dle.rae.es/', info.selectionText);
+		break;		
 	case 'fileName':
 		to_filename(info.selectionText);
 		break;
@@ -130,6 +133,7 @@ let items = [
 	'youtube', 
 	'amazon', 
 	'imdbPro',
+	'dicReal',
 	'get_file',
 	'Color on/off',
 	'Delete on/off', 
