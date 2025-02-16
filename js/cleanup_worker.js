@@ -59,9 +59,27 @@ async function handleSelection(info){
 	case 'imdbPro':
 		search_site('https://pro.imdb.com/api/instantSearch?retina=false&q=', info.selectionText);
 		break;
+	case 'define':
+		search_site('https://www.google.com/search?q=define ', info.selectionText);
+		break;
+	case 'theFreeDic':
+		search_site('https://www.thefreedictionary.com/', info.selectionText);
+		break;
+	case 'thesaurus':
+		search_site('https://www.thesaurus.com/browse/', info.selectionText);
+		break;
+	case 'engToSpa':
+		search_site('https://translate.google.com/?sl=en&tl=es&op=translate&text=', info.selectionText);
+		break;
+	case 'spaToEng':
+		search_site('https://translate.google.com/?sl=es&tl=en&op=translate&text=', info.selectionText);
+		break;
 	case 'dicReal':
 		search_site('https://dle.rae.es/', info.selectionText);
-		break;		
+		break;
+	case 'sinonimEsp':
+		search_site('https://www.wordreference.com/sinonimos/', info.selectionText);
+		break;
 	case 'fileName':
 		to_filename(info.selectionText);
 		break;
@@ -133,15 +151,27 @@ let items = [
 	'youtube', 
 	'amazon', 
 	'imdbPro',
-	'dicReal',
+	'textAssist',
 	'get_file',
 	'Color on/off',
-	'Delete on/off', 
-	'src',
-	'fileName', 
-	'camelCase', 
-	'underscore' 
+	'Delete on/off',
+	'src'
 	];
+
+//    						ARRAY FOR TEXT ASSISTANCE
+let text_assist = [
+	'define',
+	'theFreeDic',
+	'thesaurus',
+	'engToSpa',
+	'spaToEng',
+	'dicReal',
+	'sinonimEsp',
+	'fileName', 
+	'camelcase', 
+	'underscore' 	
+	];
+
 
 // 						ARRAY FOR COLORING RIGHT CLICK MENU
 let items_coloring = [ 
@@ -179,6 +209,17 @@ for(let i = 0; i < items.length; ++i){
 		id: items[i]
 	});
 }
+
+for(let i = 0; i < text_assist.length; ++i){
+	console.log('--text_assist--> ', text_assist[i]);
+	chrome.contextMenus.create({
+		title: text_assist[i],
+		contexts: ['all'],
+		id: text_assist[i],
+		parentId: 'textAssist'
+	});
+}
+
 
 for(let i = 0; i < items_coloring.length; ++i){
 	console.log('--ITEMS_COLORING--> ', items_coloring[i]);
@@ -372,7 +413,6 @@ async function to_filename(txt_to_reformat){
 async function to_camelcase(txt_to_reformat){
 	let camelcase_txt = txt_prep(txt_to_reformat).map((txt) => txt.toLowerCase() ).map((txt) => txt[0].toUpperCase()+txt.substring(1,) ).join('');
 	let [tab, tab_idx] = await getActiveTab();
-
 	showTxt(camelcase_txt, tab, tab_idx);
 
 }
