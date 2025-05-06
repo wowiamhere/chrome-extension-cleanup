@@ -102,6 +102,12 @@ async function handleSelection(info){
 	case 'set_tags':
 		get_file(info);
 		break;
+	case 'gmaps':
+		get_map(info.selectionText)
+		break;
+	case 'gearth':
+		get_map(info.selectionText, src='gearth')
+		break;
 	case 'Delete on/off':
 		if ( get_stat() != 'COL' )
 			delete_element();
@@ -151,11 +157,14 @@ let items = [
 	'youtube', 
 	'amazon', 
 	'imdbPro',
+	'gmaps',
+	'gearth',
 	'textAssist',
 	'get_file',
 	'Color on/off',
 	'Delete on/off',
-	'src'
+	'src',
+	'href'
 	];
 
 //    						ARRAY FOR TEXT ASSISTANCE
@@ -239,6 +248,28 @@ for(let i=0; i < items_file.length; ++i){
 		id: items_file[i],
 		parentId: 'get_file'
 	});
+}
+
+
+//------------------------------------------------------------
+//------------------------------------------------------------
+//-- USER SELECTED TEXT TO OPEN IN MAPS AND GOOGLE EARTH -----
+//------------------------------------------------------------
+//------------------------------------------------------------
+async function get_map(info, src='gmaps'){
+	let [tab, tab_idx] = await getActiveTab();
+	let url = ''
+
+	if(src == 'gearth')
+		url = 'https://earth.google.com/web/search/';
+	else
+		url = 'https://www.google.com/maps/place/';
+
+	chrome.tabs.create({
+			active: true,
+			openerTabId: tab[tab_idx].id,
+			url: url + info
+		});	
 }
 
 //------------------------------------------------------------
