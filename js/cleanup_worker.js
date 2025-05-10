@@ -108,6 +108,9 @@ async function handleSelection(info){
 	case 'gearth':
 		get_map(info.selectionText, src='gearth')
 		break;
+	case 'gdir':
+		get_map(info.selectionText, src='gdir')
+		break;		
 	case 'Delete on/off':
 		if ( get_stat() != 'COL' )
 			delete_element();
@@ -158,6 +161,7 @@ let items = [
 	'amazon', 
 	'imdbPro',
 	'gmaps',
+	'gdir',
 	'gearth',
 	'textAssist',
 	'get_file',
@@ -262,6 +266,8 @@ async function get_map(info, src='gmaps'){
 
 	if(src == 'gearth')
 		url = 'https://earth.google.com/web/search/';
+	else if(src == 'gdir')
+		url = 'https://www.google.com/maps/dir/';
 	else
 		url = 'https://www.google.com/maps/place/';
 
