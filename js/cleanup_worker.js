@@ -262,7 +262,9 @@ for(let i=0; i < items_file.length; ++i){
 //------------------------------------------------------------
 async function get_map(info, src='gmaps'){
 	let [tab, tab_idx] = await getActiveTab();
-	let url = ''
+	let url = '';
+	let reg = /[ \n]/g; 
+	info = info.replaceAll(reg, '+');
 
 	if(src == 'gearth')
 		url = 'https://earth.google.com/web/search/';
