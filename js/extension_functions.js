@@ -51,17 +51,9 @@ console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
       extension_user_stylesheet.replaceSync('');
       end_coloring();
     }
-    else if(message.msg == 'GET_FILE'){
-      sendResponse({stat: 'here', to_do: message.to_do});
+    else if(message.msg == 'innerHtml' )
+      get_el_txt( message.msg );
 
-      if(message.to_do == 'set_tags')
-        set_tags();
-      else
-        get_file(message.to_do);
-    }
-    else if(message.msg == 'APP_RESULT'){
-      html_for_app_result( message.stat );
-    }
     else{
       console.log('MESSAGE NOT RECOGNIZED!!!!!!!!!!!!!!');
       return;
@@ -89,296 +81,54 @@ document.adoptedStyleSheets = [
   extension_stylesheet_links,
   extension_stylesheet_hide ];
 
-
-//----------------------------------------------
-//-----------SET META TAGS FOR AN MP3 FILE------
-//----------------------------------------------
-//----------------------------------------------
-async function set_tags(){
-  let dialog_el = document.createElement('dialog');
-  dialog_el.id = 'dialog-for-tags';
-  dialog_el.class = 'dialog-for-tags';
-  dialog_el.style = 'margin:auto';
-
-  //-------------------------------------------------------
-  //-------------------------------------------------------
-  //-- INPUT ELEMENTS FOR TITLE, ARTIST AND GENRE METAGS---
-  //-- FILE NAME AND PATH TO FILE--------------------------
-  //-------------------------------------------------------
-  //-------------------------------------------------------
-  let input_path = document.createElement('input');
-  input_path.id = 'input_path_id';
-  input_path.class = 'input_path_id';
-  input_path.style = 'display:inline-block;border:1px dotted red;';
-  input_path.type = 'text';
-  input_path.name = 'path';
-  input_path.placeholder = 'path'
-
-  let input_title = document.createElement('input');
-  input_title.id = 'title_id';
-  input_title.class = 'title_id';
-  input_title.style = 'display:inline-block;border:1px dotted red;';
-  input_title.type = 'text';
-  input_title.name = 'title';
-  input_title.placeholder = 'title'
-
-  let input_artist = document.createElement('input');
-  input_artist.id = 'artist_id';
-  input_artist.class = 'artist_id';
-  input_artist.style = 'display:inline-block;border:1px dotted red;';
-  input_artist.type = 'text';
-  input_artist.name = 'artist';
-  input_artist.placeholder = 'artist';
-
-  let input_genre = document.createElement('input');
-  input_genre.id = 'genre_id';
-  input_genre.class = 'genre_id';
-  input_genre.style = 'display:inline-block;border:1px dotted red;';
-  input_genre.type = 'text';
-  input_genre.name = 'genre';
-  input_genre.placeholder = 'genre';
-
-  const f_handle = await window.showOpenFilePicker( );
-
-
-  //----------------------------------------------------------------
-  //-- button ATTACHED TO input. INCLUDES A CLICK EVENT
-  //-- SENDS MESSAGE TO NATIVE APP FOR UPDATING MP3 FILE TAGS
-  //-- SENDS FILE NAME, PATH TO FILE, TITLE, ARTIST, GENRE TO UPDATE
-  //----------------------------------------------------------------
-  let btn_set_tags = document.createElement('button');
-  btn_set_tags.id = 'set-tags-button';
-  btn_set_tags.class = 'set-tags-button';
-  btn_set_tags.style = 'display:inline-block;border:1px solid black;color:black;';
-  btn_set_tags.innerText = "Set Tags";
-  btn_set_tags.type = 'button';
-
-  btn_set_tags.onclick = () => {
-    msg = { 
-        to_do: 'set_tags',
-        path: input_path.value,
-        f_name: f_handle[0]['name'],
-        title: input_title.value, 
-        artist: input_artist.value, 
-        genre: input_genre.value 
-    };
-
-    chrome.runtime.sendMessage( msg );
-    dialog_el.close();
-    dialog_el.remove();
-  }
-
-  dialog_el.appendChild( input_path );
-  dialog_el.appendChild( input_title );
-  dialog_el.appendChild( input_artist );
-  dialog_el.appendChild( input_genre );
-  dialog_el.appendChild( btn_set_tags );
-
-  //-------------------------------------------------------------
-  //-- modal APPENDED TO PAGE body AND ACTIVATED
-  //-------------------------------------------------------------
-  let dialog_el_appended = document.body.appendChild( dialog_el );
-  dialog_el_appended.showModal();
-
+//----------------------------------------------------------
+//----------------------------------------------------------
+//-- LISTENERS TO HIGHLIGHT WHICH ELMENT IS BEING INSPECTED
+//-- REMOVES LISTENERS AFTER DONE
+//----------------------------------------------------------
+//----------------------------------------------------------
+function add_listeners(){
+  document.body.addEventListener("mouseover", highlight_el, {once:false} );
+  document.body.addEventListener("mouseout", remove_highlight, {once:false} );
 }
+function remove_listeners(){
+  document.body.removeEventListener("mouseover", highlight_el);
+  document.body.removeEventListener("mouseout", remove_highlight);  
+}
+
 
 //---------------------------------------------------------
-//----------------------------------------------------------
-//---GET DIFFERENT FILE VERSION OF HTML PORTION OF A WEBPAGE
-//----------------------------------------------------------
-//----------------------------------------------------------
-async function get_file(to_do){
-
-  function get_file_open_page(){
-    document.body.removeEventListener('mouseover', highlight_el);
-    document.body.removeEventListener('mouseout', remove_highlight);
-    document.body.removeEventListener('click', prep_file);
-    remove_highlight();
-    handle_links('open');
-  }
-
-  prep_file = async ()=>{
-  let sel = get_selector( document.querySelectorAll(':hover') );
-
-  let dom_el = document.querySelector( sel );
-  dom_el.style = '';
-
-  let content_div = document.createElement('div');
-  content_div.appendChild( dom_el.cloneNode(true) );
-  let data = new Blob( [ content_div.outerHTML ], { type: 'text/html'});
-
-  try{
-    const file_handle = await window.showSaveFilePicker( { suggestedName: 'file-conversion.html' } );
-    const writable = await file_handle.createWritable( { mode:'exclusive' } );
-    await writable.write( data );
-    await writable.close();
-  
-    chrome.runtime.sendMessage( { to_do: to_do  });
-
-    get_file_open_page();
-  }
-  catch (err){
-    console.log('File error--> ', err);
-    get_file_open_page();
-  }
-
-
-  }
-
+//---------------------------------------------------------
+//-- RETRIEVES ELEMENT INNERHTML OR ALT
+//---------------------------------------------------------
+//---------------------------------------------------------
+function get_el_txt(to_do){
   handle_links('kill');
-  document.body.addEventListener('mouseover', highlight_el, {once:false} );
-  document.body.addEventListener('mouseout', remove_highlight, {once:false} );
-  document.body.addEventListener('click', prep_file, {once:false} );  
-
+  add_listeners();
+  document.body.addEventListener('click', get_txt, {once:false});
 
 }
 
-//--------------------------------------------------------
-//--------------------------------------------------------
-//-- dialog ELEMENT FOR DISPLAYING RESULT (MESSAGE FROM HOST APP)
-//--------------------------------------------------------
-//--------------------------------------------------------
+function get_txt(ev){
+  let sel = get_selector( document.querySelectorAll(':hover') );
+  let el_clicked = document.querySelector( sel );
 
-function html_for_app_result(conversion_message){
-  //--------------------------------------------------------
-  //--- DIV FOR DISPLAYING dialog ELEMENT WITH RESPONSE FROM HOST APP (PYTHON)
-  //--------------------------------------------------------
-  let div_for_msg = document.createElement('div');
-  div_for_msg.id = "conversion-result-div";
-  div_for_msg.style = 'margin:2vh 2vw;'
-
-  let span_for_code = document.createElement('span');
-  span_for_code.id = 'span-for-code';
-  span_for_code.style = 'display:block;margin:2vh 2vw;'
-
-  let span_for_msg = document.createElement('span');
-  span_for_msg.id = 'span-for-msg';
-  span_for_msg.style = 'display:block;margin:2vh 2vw;'
-  
-  div_for_msg.appendChild( span_for_code );
-  div_for_msg.appendChild( span_for_msg );
-
-  let dialog_el = document.createElement('dialog');
-  dialog_el.id = 'dialog-for-response';
-  dialog_el.class = 'dialog-for-response';
-  dialog_el.style = 'margin:auto';
-
-  dialog_el.appendChild( div_for_msg );
-
-  //--------------------------------------------------------
-  //---- button TO DISREGARD THE dialog ELEMENT WITH HOST APP MESSAGE
-  //--------------------------------------------------------
-  let btn_to_hide = document.createElement('button');
-  btn_to_hide.id = 'close-dialog';
-  btn_to_hide.class = 'close-dialog';
-  btn_to_hide.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
-  btn_to_hide.innerText = 'Close';
-  btn_to_hide.type = 'button';
-  btn_to_hide.onclick = () => { 
-    dialog_el.close();
-    dialog_el.remove();
-     }
-
-  div_for_msg.appendChild( btn_to_hide );
-
-  //--------------------------------------------------------
-  //-- button TO OPEN AND VIEW FILE IN NEW CHROME TAB
-  //--------------------------------------------------------
-  let btn_view_file = document.createElement('button');
-  btn_view_file.id = 'view-file-btn';
-  btn_view_file.class = 'view-file-btn';
-  btn_view_file.style = 'display:inline-block;margin:auto;border:1px solid black;color:black';
-  btn_view_file.innerText = 'Open File';
-  btn_view_file.type = 'button';
-
-  div_for_msg.appendChild( btn_view_file ); 
-
-  //-------------------------------------------------------------
-  //-- modal appended to div and activated
-  //-------------------------------------------------------------
-  let dialog_el_appended = document.body.appendChild( dialog_el );
-  dialog_el_appended.showModal();
-
-  //-------------------------------------------------------------
-  //--  CHECK THE RESPONSE FROM APP FOR TYPE OF ACTION PERFORMED 
-  //--  AND ANY OUTPUT FROM OPERATION
-  //-------------------------------------------------------------    
-  if(conversion_message.output.done == 'Conversion'){
-
-    //----------- SET THE MESSAGE FROM APP -------------
-    span_for_msg.innerText = conversion_message.output.type;
-    span_for_code.innerText = conversion_message.stat;
-
-    btn_view_file.onclick = () => {
-      let ext_n = conversion_message.output.type
-      let msg = {to_do:'open_file', file_type: ext_n };
-      chrome.runtime.sendMessage( msg );
-    }
-
-    //--------------------------------------------------------
-    //--- input ELEMENT TO ENTER NEW FILE NAME FOR RENAMING.
-    //--------------------------------------------------------
-    let input_el = document.createElement('input');
-    input_el.id = 'input_name_id';
-    input_el.class = 'input_name_id';
-    input_el.style = 'display:inline-block;border:1px dotted red;';
-    input_el.type = 'text';
-    input_el.value = '';
-
-    div_for_msg.appendChild( input_el );
-
-    //--------------------------------------------------------
-    //-- button ATTACHED TO input. INCLUDES A CLICK EVENT
-    //-- GET THE NEW FILE NAME FROM USER AND SEND IT TO HOST APP FOR UPDATING FILE IN SYSTEM
-    //--------------------------------------------------------
-    let btn_rename_file = document.createElement('button');
-    btn_rename_file.id = 'rename-move-button';
-    btn_rename_file.class = 'rename-move-button';
-    btn_rename_file.style = 'display:inline-block;border:1px solid black;color:black;';
-    btn_rename_file.innerText = "Rename/Move";
-    btn_rename_file.type = 'button';
-    btn_rename_file.form = input_el.id;
-    btn_rename_file.onclick = () => { 
-      msg = { to_do: 'rename', new_file_name: input_el.value   };
-      chrome.runtime.sendMessage( msg );
-      dialog_el.close();
-      dialog_el.remove();
-    }
-
-    div_for_msg.appendChild( btn_rename_file );
+  if( tmp = el_clicked.querySelector('a') )
+    if( tmp.innerText != '' )
+      prompt( tmp.tagName + ' Text' + '\n' + tmp.innerText, tmp.innerText );
+  if( tmp = el_clicked.querySelector('img') ){
+    let msg_txt = [ ' ALT', tmp.alt, ' SRC', tmp.src ]
+    prompt( tmp.tagName + msg_txt[0] + '\n' + msg_txt[1], msg_txt[1] );
+    prompt( tmp.tagName + msg_txt[2] + '\n' + msg_txt[3], msg_txt[3] );
   }
-  else if(conversion_message.output.done == 'Move/Rename'){
 
-    //--------------------------------------------------------
-    //--------------------------------------------------------
-    //-- button TO VIEW RENAMED/MOVED FILE.
-    //--------------------------------------------------------
-    //--------------------------------------------------------
-
-    //---- SET THE MESSAGE FROM HOST APP ------
-    span_for_code.innerText = conversion_message.stat;
-    span_for_msg.innerText = conversion_message.output.done;
-
-    btn_view_file.onclick = () => {
-      let msg = {to_do: 'open_file', file_loc: conversion_message.output.file_loc };
-      chrome.runtime.sendMessage( msg );
-    }
-
-  }
-  else if( conversion_message.output.done == 'VIDEO DOWNLOADED'){
-    btn_view_file.remove()
-
-    span_for_msg.innerText = conversion_message.output.done;
-    span_for_code.innerText = conversion_message.stat;    
-  }
-  else if(conversion_message.output.done == 'VIDEO TO MP3' ){
-    btn_view_file.remove()
-
-    span_for_msg.innerText = conversion_message.output.done;
-    span_for_code.innerText = conversion_message.stat;
-  } 
+  document.body.removeEventListener('click', get_txt );
+  remove_listeners();
+  remove_highlight();
+  handle_links('open');
 
 }
+
 
 //---------------------------------------------------------
 //----------------------------------------------------------
@@ -392,20 +142,17 @@ function html_for_app_result(conversion_message){
 //      DEACTIVATES ALL LINKS ON WEB PAGE
 function start_deleting(){
   handle_links('kill');
-  document.body.addEventListener("mouseover", highlight_el, {once:false} );
-  document.body.addEventListener("mouseout", remove_highlight, {once:false} );
-  document.body.addEventListener("click", delete_el, {once:false});
+  add_listeners();
+  document.body.addEventListener("click", delete_el, {once:false});  
 }
 
 //      REMOVES LISTENERS FROM start_deleting AND REACTIVATES LINKS
 function stop_deleting(){
   remove_highlight();
-  document.body.removeEventListener("mouseover", highlight_el);
-  document.body.removeEventListener("mouseout", remove_highlight);
+  remove_listeners();
   document.body.removeEventListener("click", delete_el);
   handle_links('open');
 }
-
 
 //      FUNCTION FOR eventListener FROM start_deleting
 //      DELETES AN ELEMENT THAT IS BEING HOVERED ON BY USER.
@@ -437,17 +184,15 @@ async function begin_coloring(){
   check_db();
   bg_color = 'rgb(171,171,171)';
   handle_links('kill');
+  add_listeners()
   document.body.addEventListener("click", body_listener, {once:false} );
-  document.body.addEventListener("mouseover", highlight_el, {once:false} );
-  document.body.addEventListener("mouseout", remove_highlight, {once:false} );
 }
 
 //      OPENS UP ALL LINKS AND REMOVES THE eventListener FROM begin_coloring.  STOPS ALL COLORING FUNCTIONS.
 function end_coloring(){
   remove_highlight();
+  remove_listeners();
   document.body.removeEventListener('click', body_listener);
-  document.body.removeEventListener("mouseover", highlight_el);
-  document.body.removeEventListener("mouseout", remove_highlight);  
   handle_links('open');
 }
 
@@ -588,9 +333,7 @@ function highlight_el(){
     sel = get_selector( document.querySelectorAll(':hover') );
 
     document.querySelector( sel ).style.border = "1px solid red";
-    //document.querySelector( sel + ' :first-child').style.border = "1px solid green";
 
-    //all_children('show');
   }
   catch{}
 }

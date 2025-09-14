@@ -90,17 +90,10 @@ async function handleSelection(info){
 		to_underscore(info.selectionText);
 		break;
 	case 'src':
-		get_file_src(info);
+		get_src(info);
 		break;
-	case 'vid':
-	case 'mp3':
-	case 'pdf':
-	case 'docx':
-	case 'odt':
-	case 'plain':
-	case 'markdown_strict':
-	case 'set_tags':
-		get_file(info);
+	case 'innerHtml':
+		get_element_txt(info.menuItemId)
 		break;
 	case 'gmaps':
 		get_map(info.selectionText)
@@ -160,15 +153,14 @@ let items = [
 	'youtube', 
 	'amazon', 
 	'imdbPro',
+	'innerHtml',
+	'src',
 	'gmaps',
 	'gdir',
 	'gearth',
 	'textAssist',
-	'get_file',
 	'Color on/off',
-	'Delete on/off',
-	'src',
-	'href'
+	'Delete on/off'
 	];
 
 //    						ARRAY FOR TEXT ASSISTANCE
@@ -197,17 +189,6 @@ let items_coloring = [
 	'RESTORE_SAVED_CSS', 
 	'CLEAR_STORAGE', 
 	'DELETE_PAGE_COLORING'
-	];
-
-let items_file = [
-	'vid',
-	'mp3',
-	'set_tags',
-	'pdf',
-	'docx',
-	'odt',
-	'plain',
-	'markdown_strict'
 	];
 
 //----------------------------------------------
@@ -244,14 +225,24 @@ for(let i = 0; i < items_coloring.length; ++i){
 	});
 }
 
-for(let i=0; i < items_file.length; ++i){
-	console.log('-- items_file--> ', items_file[i])
-	chrome.contextMenus.create({
-		title: items_file[i],
-		contexts: ['all'],
-		id: items_file[i],
-		parentId: 'get_file'
-	});
+//------------------------------------------------------------
+//------------------------------------------------------------
+// -- SENDS MESSAGE TO RETRIEVE EITHER INNERHTML OR ALT TXT
+//------------------------------------------------------------
+//------------------------------------------------------------
+async function get_element_txt(to_do){
+	console.log('message!!!!!!!!!!!', to_do);
+	let [tab, tab_idx] = await getActiveTab();
+
+	let resend_message = () => {
+		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );	
+	}
+
+	let is_script_injected = async (resp) => {
+		check_send( resp, tab, tab_idx, resend_message )
+	}
+
+	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, is_script_injected );
 }
 
 
@@ -280,36 +271,6 @@ async function get_map(info, src='gmaps'){
 		});	
 }
 
-//------------------------------------------------------------
-//------------------------------------------------------------
-//-- FOR GETTING A PDF, DOCX, MARKDOWN, PLAINTEXT,------------
-//-- ODT FILE FROM HTML SELECTION, SET TAGS OF AN MP3 FILE----
-//------------------------------------------------------------
-//------------------------------------------------------------
-
-async function get_file(info){
-	to_do_var = info.menuItemId;
-	let [tab, tab_idx, w_id] = await getActiveTab();
-
-	if( to_do_var == 'vid' || to_do_var == 'mp3' )
-		handleHostResponse( {to_do: to_do_var, url: info.selectionText })
-	else{
-
-		let send_messages = () => {
-			chrome.tabs.sendMessage( tab[tab_idx].id, { msg: 'GET_FILE', to_do: to_do_var } );
-		}
-
-		let check_if_injected = async ( resp ) => {
-			check_send(resp, tab, tab_idx, send_messages);
-		}
-
-		chrome.tabs.sendMessage( 
-			tab[tab_idx].id, 
-			{ msg: 'INJECTED?' }, 
-			check_if_injected );
-	}
-}
-
 //----------------------------------------------
 //-----------COLORING FUNCTIONALITY-------------
 //----------------------------------------------
@@ -329,7 +290,7 @@ async function start_coloring(){
 	}
 
 	let coloring_are_you_there = async ( resp ) => {
-		check_send(resp, tab, tab_idx, set_badge_send_message, script='js/extension_functions.js', coloring=true);
+		check_send(resp, tab, tab_idx, set_badge_send_message, script='js/extension_functions.js', doing='coloring');
 	}
 
 	if( stat !='COL')
@@ -463,7 +424,7 @@ async function to_underscore(txt_to_reformat){
 	showTxt(file_name, tab, tab_idx);
 }
 
-async function get_file_src(info){
+async function get_src(info){
 	console.log(info);
 	let [tab, tab_idx] = await getActiveTab();
 	
@@ -515,7 +476,7 @@ async function showTxt(txt_to_show, tab, tab_idx){
 	}	
 }
 
-async function check_send(resp, tab, tab_idx, send_fn, script='js/extension_functions.js', coloring=false){
+async function check_send(resp, tab, tab_idx, send_fn, script='js/extension_functions.js', doing=''){
 	if(resp == undefined && chrome.runtime.lastError ){
 		console.log("----- extension_functions.js -- NOT injected ------");
 
@@ -527,7 +488,7 @@ async function check_send(resp, tab, tab_idx, send_fn, script='js/extension_func
 		send_fn();
 	}
 	else{
-		if(coloring){
+		if(doing == 'coloring'){
 			if(chrome.action.getBadgeText( { tabId: tab[tab_idx].id } ) != 'COL' ){
 				send_fn();
 			}
