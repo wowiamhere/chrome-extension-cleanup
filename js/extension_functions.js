@@ -51,7 +51,7 @@ console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
       extension_user_stylesheet.replaceSync('');
       end_coloring();
     }
-    else if(message.msg == 'innerHtml' )
+    else if(message.msg == 'elementInfo' )
       get_el_txt( message.msg );
 
     else{
@@ -103,29 +103,31 @@ function remove_listeners(){
 //---------------------------------------------------------
 //---------------------------------------------------------
 function get_el_txt(to_do){
-  handle_links('kill');
   add_listeners();
   document.body.addEventListener('click', get_txt, {once:false});
 
-}
 
-function get_txt(ev){
-  let sel = get_selector( document.querySelectorAll(':hover') );
-  let el_clicked = document.querySelector( sel );
 
-  if( tmp = el_clicked.querySelector('a') )
-    if( tmp.innerText != '' )
-      prompt( tmp.tagName + ' Text' + '\n' + tmp.innerText, tmp.innerText );
-  if( tmp = el_clicked.querySelector('img') ){
-    let msg_txt = [ ' ALT', tmp.alt, ' SRC', tmp.src ]
-    prompt( tmp.tagName + msg_txt[0] + '\n' + msg_txt[1], msg_txt[1] );
-    prompt( tmp.tagName + msg_txt[2] + '\n' + msg_txt[3], msg_txt[3] );
+  function get_txt(ev){
+  console.log(event);
+    event.preventDefault();
+
+    el_attributes = event.srcElement.attributes;
+
+    info = { a___: event.srcElement.tagName, aa__: event.srcElement.textContent };
+    Object.keys(el_attributes).forEach( (item) => { info[ el_attributes[ item ].name ] = el_attributes[ item ].value; } )
+
+    msg = { [to_do]: info };
+
+    chrome.runtime.sendMessage( msg ).then( 
+      (r) => { 
+        document.body.removeEventListener('click', get_txt );
+        remove_listeners();
+        remove_highlight();
+      } ).catch( 
+      (e) => {console.log( 'ERR-> ', e);} );
+
   }
-
-  document.body.removeEventListener('click', get_txt );
-  remove_listeners();
-  remove_highlight();
-  handle_links('open');
 
 }
 
@@ -143,14 +145,14 @@ function get_txt(ev){
 function start_deleting(){
   handle_links('kill');
   add_listeners();
-  document.body.addEventListener("click", delete_el, {once:false});  
+  document.body.addEventListener('click', delete_el, {once:false});  
 }
 
 //      REMOVES LISTENERS FROM start_deleting AND REACTIVATES LINKS
 function stop_deleting(){
   remove_highlight();
   remove_listeners();
-  document.body.removeEventListener("click", delete_el);
+  document.body.removeEventListener('click', delete_el);
   handle_links('open');
 }
 
@@ -185,7 +187,7 @@ async function begin_coloring(){
   bg_color = 'rgb(171,171,171)';
   handle_links('kill');
   add_listeners()
-  document.body.addEventListener("click", body_listener, {once:false} );
+  document.body.addEventListener('click', body_listener, {once:false} );
 }
 
 //      OPENS UP ALL LINKS AND REMOVES THE eventListener FROM begin_coloring.  STOPS ALL COLORING FUNCTIONS.

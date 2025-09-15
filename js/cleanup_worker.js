@@ -41,6 +41,7 @@ let handleHostResponse = async (message, sender, sendResponse) => {
 		console.log('DISCONECTED --> ', info) 
 	});
 }
+
 chrome.runtime.onMessage.addListener( handleHostResponse );
 
 
@@ -48,6 +49,7 @@ chrome.runtime.onMessage.addListener( handleHostResponse );
 //---- contextMenu.onClicked.addListener AND ITS CALLBACK
 //-----------------------------------------------------------
 chrome.contextMenus.onClicked.addListener( handleSelection );
+
 async function handleSelection(info){
 	switch (info.menuItemId){
 	case 'youtube':
@@ -92,8 +94,8 @@ async function handleSelection(info){
 	case 'src':
 		get_src(info);
 		break;
-	case 'innerHtml':
-		get_element_txt(info.menuItemId)
+	case 'elementInfo':
+		get_element_info(info.menuItemId)
 		break;
 	case 'gmaps':
 		get_map(info.selectionText)
@@ -153,7 +155,7 @@ let items = [
 	'youtube', 
 	'amazon', 
 	'imdbPro',
-	'innerHtml',
+	'elementInfo',
 	'src',
 	'gmaps',
 	'gdir',
@@ -230,19 +232,19 @@ for(let i = 0; i < items_coloring.length; ++i){
 // -- SENDS MESSAGE TO RETRIEVE EITHER INNERHTML OR ALT TXT
 //------------------------------------------------------------
 //------------------------------------------------------------
-async function get_element_txt(to_do){
+async function get_element_info(to_do){
 	console.log('message!!!!!!!!!!!', to_do);
 	let [tab, tab_idx] = await getActiveTab();
 
-	let resend_message = () => {
-		chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );	
+	let resend_message = async () => {
+		await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );	
 	}
 
 	let is_script_injected = async (resp) => {
 		check_send( resp, tab, tab_idx, resend_message )
 	}
 
-	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, is_script_injected );
+	chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, is_script_injected );
 }
 
 
