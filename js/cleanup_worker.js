@@ -5,41 +5,6 @@ const reg = /[\W_]/g;
 //---------------------------------------------------
 let handleHostResponse = async (message, sender, sendResponse) => {
 	console.log('cleanup_worker.js, chrome.runtime.onMessage --> ', message);
-
-	//------------------------------------------------------
-	//---- port creating and port.OnMessage, port.OnDisconnect LISTENERS
-	//--------------------------------------------------------
-
-	let msg = message;
-
-	let port = chrome.runtime.connectNative('com.get_script');
-	port.postMessage( msg );
-
-	port.onMessage.addListener( async function(resp){
-		console.log('cleanup_worker.js, port.onMessage: --> ', resp );
-		
-		let  conversion_response = { 'msg': Object.keys(resp)[0], 'stat': resp[Object.keys(resp)[0]] };
-		let [tab ,tab_idx ,w_id] = await getActiveTab();
-		let send_message = async () => {
-			await chrome.tabs.sendMessage( tab[tab_idx].id, conversion_response );
-		}
-
-		let check_if_script_there = async (resp) => {
-			check_send(resp, tab, tab_idx, send_message);
-		}
-
-	    try{
-	    	let check_msg = { msg: 'INJECTED?'};
-	    	console.log('cleanup_worker.js, chrome.tabs.sendMessage --> ', check_msg);
-	    	await chrome.tabs.sendMessage( tab[tab_idx].id, check_msg, check_if_script_there );
-	    }
-	    catch{
-	    	console.log('NO ACTIVE TABS TO DISPLAY MESSAGE --> \n', conversion_response.stat );
-	    }		
-	});
-	port.onDisconnect.addListener( (info) => {
-		console.log('DISCONECTED --> ', info) 
-	});
 }
 
 chrome.runtime.onMessage.addListener( handleHostResponse );
@@ -90,9 +55,6 @@ async function handleSelection(info){
 		break;
 	case 'underscore':
 		to_underscore(info.selectionText);
-		break;
-	case 'src':
-		get_src(info);
 		break;
 	case 'elementInfo':
 		get_element_info(info.menuItemId)
@@ -156,7 +118,6 @@ let items = [
 	'amazon', 
 	'imdbPro',
 	'elementInfo',
-	'src',
 	'gmaps',
 	'gdir',
 	'gearth',
@@ -233,18 +194,19 @@ for(let i = 0; i < items_coloring.length; ++i){
 //------------------------------------------------------------
 //------------------------------------------------------------
 async function get_element_info(to_do){
-	console.log('message!!!!!!!!!!!', to_do);
+	console.log('-----cleanup_worker.js ----- get_element_info()', to_do);
 	let [tab, tab_idx] = await getActiveTab();
 
-	let resend_message = async () => {
+	let send_message = async () => {
 		await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do } );	
 	}
 
 	let is_script_injected = async (resp) => {
-		check_send( resp, tab, tab_idx, resend_message )
+		check_send( resp, tab, tab_idx, send_message )
 	}
 
-	chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, is_script_injected );
+	//await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: to_do }, is_script_injected );
+	await chrome.tabs.sendMessage( tab[tab_idx].id, { msg: "INJECTED?" }, is_script_injected );
 }
 
 
@@ -426,19 +388,6 @@ async function to_underscore(txt_to_reformat){
 	showTxt(file_name, tab, tab_idx);
 }
 
-async function get_src(info){
-	console.log(info);
-	let [tab, tab_idx] = await getActiveTab();
-	
-	if(info.srcUrl)
-		showTxt(info.srcUrl, tab, tab_idx);
-	else if(info.linkUrl)
-		showTxt(info.linkUrl, tab, tab_idx);
-	else
-		showTxt("NO srcURL/linkUrl", tab, tab_idx);
-
-}
-
 // ************************************************
 // ************************************************
 // ************************************************
@@ -479,7 +428,10 @@ async function showTxt(txt_to_show, tab, tab_idx){
 }
 
 async function check_send(resp, tab, tab_idx, send_fn, script='js/extension_functions.js', doing=''){
-	if(resp == undefined && chrome.runtime.lastError ){
+	console.log('--- cleanup_worker.js ---- check_send() ---');
+	console.log('!!!!!!!!!--> ', resp);
+	[tab, tab_idx] = await getActiveTab();
+	if(resp == undefined ){//&& chrome.runtime.lastError ){
 		console.log("----- extension_functions.js -- NOT injected ------");
 
 		await chrome.scripting.executeScript({

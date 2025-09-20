@@ -75,6 +75,8 @@ let extension_stylesheet = new CSSStyleSheet();
 
 let sel = null;
 
+let highlited_element = null;
+
 document.adoptedStyleSheets = [ 
   extension_stylesheet, 
   extension_user_stylesheet, 
@@ -94,6 +96,29 @@ function add_listeners(){
 function remove_listeners(){
   document.body.removeEventListener("mouseover", highlight_el);
   document.body.removeEventListener("mouseout", remove_highlight);  
+ 
+}
+function get_dialog_el(){
+  let dialog_el = document.createElement('dialog');
+  dialog_el.id = 'dialog_el_text_id';
+  dialog_el.class = 'dialog_el_text_class';
+  dialog_el.style = 'margin:auto';
+
+  div_el_text = document.createElement('div');
+  div_el_text.id = 'div_el_text_id';
+  
+  pre_el = document.createElement('pre');
+  pre_el.id = 'pre_el_id';
+
+  dialog_btn = document.createElement('button');
+  dialog_btn.id = 'dialog_btn_id';
+  dialog_btn.textContent = 'Close';
+  dialog_btn.onclick = () => { dialog_el.remove(); }
+
+  div_el_text.appendChild( pre_el );
+  dialog_el.appendChild( div_el_text );
+  dialog_el.appendChild( dialog_btn );
+  return document.body.appendChild( dialog_el );
 }
 
 
@@ -103,29 +128,29 @@ function remove_listeners(){
 //---------------------------------------------------------
 //---------------------------------------------------------
 function get_el_txt(to_do){
+
   add_listeners();
   document.body.addEventListener('click', get_txt, {once:false});
 
-
-
   function get_txt(ev){
-  console.log(event);
+    ev.target.style.border = '';
     event.preventDefault();
 
-    el_attributes = event.srcElement.attributes;
+    let el_attributes = event.target.attributes;
+    let dialog_el_appended = get_dialog_el();
+    let cssText = 'display:inline-block;width:90%;white-space:nowrap;overflow-x:auto';
+    
 
-    info = { a___: event.srcElement.tagName, aa__: event.srcElement.textContent };
-    Object.keys(el_attributes).forEach( (item) => { info[ el_attributes[ item ].name ] = el_attributes[ item ].value; } )
+    pre_el.innerHTML = `${event.target.tagName} <br> <span style='${cssText}'>${event.target.textContent}</span> <br><br> `;
 
-    msg = { [to_do]: info };
+    Object.keys( el_attributes ).forEach( (key) => {
+      pre_el.innerHTML += `<span style='${cssText}'>${el_attributes[key].name}:</span> <br>  <span style='${cssText}'>${el_attributes[key].value}</span> <br>`;
+    } );
 
-    chrome.runtime.sendMessage( msg ).then( 
-      (r) => { 
-        document.body.removeEventListener('click', get_txt );
-        remove_listeners();
-        remove_highlight();
-      } ).catch( 
-      (e) => {console.log( 'ERR-> ', e);} );
+    remove_listeners();
+    document.body.removeEventListener('click', get_txt );
+
+    dialog_el_appended.showModal();
 
   }
 
@@ -143,15 +168,14 @@ function get_el_txt(to_do){
 //      INSERTS BODY LISTENERS TO body ELEMENT TO HIGHLIGHT HOVERED ELEMENT UPON CLICKING ELEMENT IS DELETED
 //      DEACTIVATES ALL LINKS ON WEB PAGE
 function start_deleting(){
-  handle_links('kill');
   add_listeners();
   document.body.addEventListener('click', delete_el, {once:false});  
 }
 
 //      REMOVES LISTENERS FROM start_deleting AND REACTIVATES LINKS
 function stop_deleting(){
-  remove_highlight();
   remove_listeners();
+  remove_highlight();
   document.body.removeEventListener('click', delete_el);
   handle_links('open');
 }
@@ -159,15 +183,9 @@ function stop_deleting(){
 //      FUNCTION FOR eventListener FROM start_deleting
 //      DELETES AN ELEMENT THAT IS BEING HOVERED ON BY USER.
 //      THE ELEMENT IS ALSO BEING HIGHLITED WITH style.border CSS ATTIBUTE
-function delete_el(){
-  try{
-    sel = get_selector( document.querySelectorAll(':hover') );
-  
-    document.querySelector( sel ).remove();
-    
-    sel = null;
-  }
-  catch{}
+function delete_el(event){ 
+  event.preventDefault();
+  event.target.remove(); 
 }
 
 //-------------------------------------------------------------
@@ -192,8 +210,8 @@ async function begin_coloring(){
 
 //      OPENS UP ALL LINKS AND REMOVES THE eventListener FROM begin_coloring.  STOPS ALL COLORING FUNCTIONS.
 function end_coloring(){
-  remove_highlight();
   remove_listeners();
+  remove_highlight();
   document.body.removeEventListener('click', body_listener);
   handle_links('open');
 }
@@ -207,7 +225,7 @@ function body_listener(ev){
   let index;
   let selector;
   let rule;
-  
+console.log("AAAAAAAAAAA--->, ", ev);
   if(ev){
 
     selector = get_selector( document.querySelectorAll(':hover') );
@@ -330,40 +348,21 @@ function handle_links(to_do){
 //    FUNCTION FOR eventListener mouseover FROM start_deleting
 //    UPON USER HOVERING OVER AN ELEMENT, A SELECTOR IS RETREIVED AND STORED IN GLOBAL VARIABLE AND 
 //      THE ELEMENT AND ITS CHILDRENS CSS BORDER ATTRIBUTE IS ACTIVATED TO HIGHLIGHT ELEMENT TO USER 
-function highlight_el(){
-  try{
-    sel = get_selector( document.querySelectorAll(':hover') );
-
-    document.querySelector( sel ).style.border = "1px solid red";
-
-  }
-  catch{}
-}
-
-//      HELPER FUNCTION TO ACTIVATE AND DEACTIVATE THE  style.border ATTRIBUTE OF ALL CHILDREN OF AN ELEMENT
-//        HOVERED OVER BY USER.
-function all_children(to_do){
-  children = document.querySelector( sel ).children;
-  for(let i=1;i < children.length;i++){
-    if(to_do == 'show')
-      children[i].style.border="1px solid black";
-    else
-      children[i].style.border="";
-  }
+function highlight_el(event){
+  event.preventDefault();
+  event.target.style.border = "1px solid red";
+  highlited_element = event.target;
 }
 
 //      FUNCTION FOR eventListener mouseout FROM start_deleting
 //      QUERY UPON SELECTOR FROM GLOBAL SCOPE TO DEACTIVATE CSS FOR BORDER
-function remove_highlight(){
-  try{
-    document.querySelector( sel ).style.border = "";
-    document.querySelector( sel + ' :first-child').style.border = "";
-    all_children('hide');
-    sel = null;
+function remove_highlight(event){
+  if(!event){
+    highlited_element.style.border = '';
+    highlited_element = null;
+    return;
   }
-  catch{
-
-  }
+  event.target.style.border = '';
 }
 
 function check_sheet(slctr){
