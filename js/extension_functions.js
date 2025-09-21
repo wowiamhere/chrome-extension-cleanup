@@ -6,7 +6,7 @@
 //    SAVES CSS DATA IN storage.local AND RETREIVES DATA TO RE-APPLIED TO WEB PAGE
 
 
-console.log('----extension_functions.js INJECTED #############');
+console.log('----extension_functions.js INJECTED ######');
 
 chrome.runtime.onMessage.addListener( 
    async (message, sender, sendResponse) => {
@@ -14,24 +14,16 @@ chrome.runtime.onMessage.addListener(
 console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
     if(message.msg == 'INJECTED?')
       sendResponse( { msg: 'EXTENSION_FUNCTIONS_HERE'} );
-    else if( message.msg == 'START_DELETING'){
+    else if( message.msg == 'START_DELETING')
       start_deleting();
-      console.log('----DELETING STARTED!!!!!!!!');
-    }
-    else if( message.msg == 'DELETE_OFF' ){
+    else if( message.msg == 'DELETE_OFF' )
       stop_deleting();
-      console.log('----DONE DELETING @@@@@@@@@@@@');
-    }
-    else if(message.msg == 'START_COLORING'){
-      console.log('----COLOIRNG!!!---START!!!!!!!!');
+    else if(message.msg == 'START_COLORING')
       begin_coloring();
-    }
-    else if(message.msg == 'COLORING_OFF'){
-      console.log('----DONE COLORING @@@@@@@@@@');
+    else if(message.msg == 'COLORING_OFF')
       end_coloring();
-    }
     else if(message.msg == 'COLOR')
-      ; //bg_color = message.color;
+      ;
     else if(message.msg == 'COLORING_BACK')
       delete_rule(0);
     else if(message.msg == 'COLORING_SAVE'){
@@ -42,9 +34,8 @@ console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
       clear_css();
     else if(message.msg == 'COLORING_RESTORE_SAVED_CSS')
       restore_last();
-    else if(message.msg == 'COLORING_CLEAR_STORAGE'){
+    else if(message.msg == 'COLORING_CLEAR_STORAGE')
       await chrome.storage.local.clear();
-    }
     else if(message.msg == 'COLORING_REMOVE_WEBSITE'){
       let site = document.location.origin + document.location.pathname;
       await chrome.storage.local.remove( site );
@@ -53,7 +44,6 @@ console.log('----EXTENSION_FUNCTIONS.JS, message received ---->\n', message );
     }
     else if(message.msg == 'elementInfo' )
       get_el_txt( message.msg );
-
     else{
       console.log('MESSAGE NOT RECOGNIZED!!!!!!!!!!!!!!');
       return;
@@ -118,6 +108,7 @@ function get_dialog_el(){
   div_el_text.appendChild( pre_el );
   dialog_el.appendChild( div_el_text );
   dialog_el.appendChild( dialog_btn );
+  
   return document.body.appendChild( dialog_el );
 }
 
@@ -135,6 +126,7 @@ function get_el_txt(to_do){
   function get_txt(ev){
     ev.target.style.border = '';
     event.preventDefault();
+    event.stopImmediatePropagation();
 
     let el_attributes = event.target.attributes;
     let dialog_el_appended = get_dialog_el();
@@ -168,12 +160,14 @@ function get_el_txt(to_do){
 //      INSERTS BODY LISTENERS TO body ELEMENT TO HIGHLIGHT HOVERED ELEMENT UPON CLICKING ELEMENT IS DELETED
 //      DEACTIVATES ALL LINKS ON WEB PAGE
 function start_deleting(){
+  console.log('----DELETING STARTED!!!!!!!!');
   add_listeners();
   document.body.addEventListener('click', delete_el, {once:false});  
 }
 
 //      REMOVES LISTENERS FROM start_deleting AND REACTIVATES LINKS
 function stop_deleting(){
+  console.log('----DONE DELETING @@@@@@@@@@@@');
   remove_listeners();
   remove_highlight();
   document.body.removeEventListener('click', delete_el);
@@ -185,6 +179,7 @@ function stop_deleting(){
 //      THE ELEMENT IS ALSO BEING HIGHLITED WITH style.border CSS ATTIBUTE
 function delete_el(event){ 
   event.preventDefault();
+  event.stopImmediatePropagation();
   event.target.remove(); 
 }
 
@@ -201,6 +196,7 @@ let bg_color = '#ababab';
 //      CHECKS storage.local TO SEE IF THERE IS ANY CSS STYLESHEET PRESENT FOR CURRENT WEB PAGE
 //        IF NOT THEY PROCEED TO DEACTIVATE ALL LINKS IN PAGE AND ADD A click eventListener TO SELECT ELEMENTS TO CHANGE BACKGROUND COLOR
 async function begin_coloring(){
+  console.log('----COLOIRNG!!!---START!!!!!!!!');
   check_db();
   bg_color = 'rgb(171,171,171)';
   handle_links('kill');
@@ -210,6 +206,7 @@ async function begin_coloring(){
 
 //      OPENS UP ALL LINKS AND REMOVES THE eventListener FROM begin_coloring.  STOPS ALL COLORING FUNCTIONS.
 function end_coloring(){
+  console.log('----DONE COLORING @@@@@@@@@@');
   remove_listeners();
   remove_highlight();
   document.body.removeEventListener('click', body_listener);
@@ -350,6 +347,7 @@ function handle_links(to_do){
 //      THE ELEMENT AND ITS CHILDRENS CSS BORDER ATTRIBUTE IS ACTIVATED TO HIGHLIGHT ELEMENT TO USER 
 function highlight_el(event){
   event.preventDefault();
+  event.stopImmediatePropagation();
   event.target.style.border = "1px solid red";
   highlited_element = event.target;
 }
